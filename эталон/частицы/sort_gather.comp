@@ -1,0 +1,41 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer StatePx { uint statePx[]; };
+layout(std430, binding = 1) readonly buffer StatePy { uint statePy[]; };
+layout(std430, binding = 2) readonly buffer StatePz { uint statePz[]; };
+layout(std430, binding = 3) readonly buffer StateVx { uint stateVx[]; };
+layout(std430, binding = 4) readonly buffer StateVy { uint stateVy[]; };
+layout(std430, binding = 5) readonly buffer StateVz { uint stateVz[]; };
+layout(std430, binding = 6) readonly buffer StateId { uint stateId[]; };
+layout(std430, binding = 7) readonly buffer Places { uint places[]; };
+layout(std430, binding = 8) writeonly buffer SortedPx { uint sortedPx[]; };
+layout(std430, binding = 9) writeonly buffer SortedPy { uint sortedPy[]; };
+layout(std430, binding = 10) writeonly buffer SortedPz { uint sortedPz[]; };
+layout(std430, binding = 11) writeonly buffer SortedVx { uint sortedVx[]; };
+layout(std430, binding = 12) writeonly buffer SortedVy { uint sortedVy[]; };
+layout(std430, binding = 13) writeonly buffer SortedVz { uint sortedVz[]; };
+layout(std430, binding = 14) writeonly buffer SortedId { uint sortedId[]; };
+
+layout(push_constant) uniform Extent
+{
+    uint count;
+} extent;
+
+void main()
+{
+    uint index = gl_GlobalInvocationID.x;
+    if (index >= extent.count)
+    {
+        return;
+    }
+    uint place = places[index];
+    sortedPx[place] = statePx[index];
+    sortedPy[place] = statePy[index];
+    sortedPz[place] = statePz[index];
+    sortedVx[place] = stateVx[index];
+    sortedVy[place] = stateVy[index];
+    sortedVz[place] = stateVz[index];
+    sortedId[place] = stateId[index];
+}

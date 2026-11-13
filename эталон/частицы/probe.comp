@@ -1,0 +1,87 @@
+#version 450
+#extension GL_EXT_spirv_intrinsics : require
+#extension GL_GOOGLE_include_directive : require
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer ScalarIn
+{
+    float scalarIn[11];
+};
+
+layout(std430, binding = 1) writeonly buffer ScalarOut
+{
+    uint scalarOut[8];
+};
+
+layout(std430, binding = 2) readonly buffer PairIn
+{
+    vec4 pairIn[];
+};
+
+layout(std430, binding = 3) writeonly buffer PairOut
+{
+    uint pairOut[];
+};
+
+layout(push_constant) uniform ProbeSize
+{
+    uint pairCount;
+} probeSize;
+
+#include "strict.glsl"
+#include "approx.glsl"
+
+void runScalarProbes()
+{
+    precise float a = scalarIn[0];
+    precise float b = scalarIn[1];
+    precise float c = scalarIn[2];
+    precise float divNum = scalarIn[3];
+    precise float divDen = scalarIn[4];
+    precise float sqArg = scalarIn[5];
+    precise float tinyA = scalarIn[6];
+    precise float tinyB = scalarIn[7];
+    precise float isolatedA = scalarIn[8];
+    precise float isolatedB = scalarIn[9];
+    precise float isolatedC = scalarIn[10];
+
+    precise float prod = a * b;
+    precise float noContractSum = prod + c;
+    precise float quotHw = divNum / divDen;
+    precise float rootHw = sqrt(sqArg);
+    precise float subnorm = tinyA * tinyB;
+    precise float explicitFma = fma(a, b, c);
+    precise float isolatedFma = fma(isolatedA, isolatedB, isolatedC);
+
+    scalarOut[0] = floatBitsToUint(noContractSum);
+    scalarOut[1] = floatBitsToUint(quotHw);
+    scalarOut[2] = floatBitsToUint(rootHw);
+    scalarOut[3] = floatBitsToUint(subnorm);
+    scalarOut[4] = floatBitsToUint(explicitFma);
+    scalarOut[5] = floatBitsToUint(softDivExact(divNum, divDen));
+    scalarOut[6] = floatBitsToUint(softSqrtExact(sqArg));
+    scalarOut[7] = floatBitsToUint(isolatedFma);
+}
+
+void main()
+{
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx == 0u)
+    {
+        runScalarProbes();
+    }
+    if (idx < probeSize.pairCount)
+    {
+        vec4 item = pairIn[idx];
+        precise float quotHw = item.x / item.y;
+        precise float rootHw = sqrt(item.z);
+        uint base = 6u * idx;
+        pairOut[base + 0u] = floatBitsToUint(quotHw);
+        pairOut[base + 1u] = floatBitsToUint(softDivExact(item.x, item.y));
+        pairOut[base + 2u] = floatBitsToUint(approxDiv(item.x, item.y));
+        pairOut[base + 3u] = floatBitsToUint(rootHw);
+        pairOut[base + 4u] = floatBitsToUint(softSqrtExact(item.z));
+        pairOut[base + 5u] = floatBitsToUint(approxSqrt(item.z));
+    }
+}

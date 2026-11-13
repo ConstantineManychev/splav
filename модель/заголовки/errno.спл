@@ -1,0 +1,340 @@
+откр внеш "C" функ __errno_location() -> ?*ц32
+
+откр конст _ERRNO_H: ц32 = 1
+
+откр конст _FEATURES_H: ц32 = 1
+
+откр конст __GLIBC_USE_ISOC2X: ц32 = 0
+
+откр конст __USE_ISOC11: ц32 = 1
+
+откр конст __USE_ISOC99: ц32 = 1
+
+откр конст __USE_ISOC95: ц32 = 1
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __TIMESIZE: ц32 = 64
+
+откр конст __USE_FORTIFY_LEVEL: ц32 = 0
+
+откр конст __GLIBC_USE_DEPRECATED_GETS: ц32 = 0
+
+откр конст __GLIBC_USE_DEPRECATED_SCANF: ц32 = 0
+
+откр конст __GLIBC_USE_C2X_STRTOL: ц32 = 0
+
+откр конст _STDC_PREDEF_H: ц32 = 1
+
+откр конст __STDC_IEC_559__: ц32 = 1
+
+откр конст __STDC_IEC_60559_BFP__: ц64 = 201404
+
+откр конст __STDC_IEC_559_COMPLEX__: ц32 = 1
+
+откр конст __STDC_IEC_60559_COMPLEX__: ц64 = 201404
+
+откр конст __STDC_ISO_10646__: ц64 = 201706
+
+откр конст __GNU_LIBRARY__: ц32 = 6
+
+откр конст __GLIBC__: ц32 = 2
+
+откр конст __GLIBC_MINOR__: ц32 = 39
+
+откр конст _SYS_CDEFS_H: ц32 = 1
+
+откр конст __glibc_c99_flexarr_available: ц32 = 1
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI: ц32 = 0
+
+откр конст __HAVE_GENERIC_SELECTION: ц32 = 1
+
+откр конст _BITS_ERRNO_H: ц32 = 1
+
+откр конст EPERM: ц32 = 1
+
+откр конст ENOENT: ц32 = 2
+
+откр конст ESRCH: ц32 = 3
+
+откр конст EINTR: ц32 = 4
+
+откр конст EIO: ц32 = 5
+
+откр конст ENXIO: ц32 = 6
+
+откр конст E2BIG: ц32 = 7
+
+откр конст ENOEXEC: ц32 = 8
+
+откр конст EBADF: ц32 = 9
+
+откр конст ECHILD: ц32 = 10
+
+откр конст EAGAIN: ц32 = 11
+
+откр конст ENOMEM: ц32 = 12
+
+откр конст EACCES: ц32 = 13
+
+откр конст EFAULT: ц32 = 14
+
+откр конст ENOTBLK: ц32 = 15
+
+откр конст EBUSY: ц32 = 16
+
+откр конст EEXIST: ц32 = 17
+
+откр конст EXDEV: ц32 = 18
+
+откр конст ENODEV: ц32 = 19
+
+откр конст ENOTDIR: ц32 = 20
+
+откр конст EISDIR: ц32 = 21
+
+откр конст EINVAL: ц32 = 22
+
+откр конст ENFILE: ц32 = 23
+
+откр конст EMFILE: ц32 = 24
+
+откр конст ENOTTY: ц32 = 25
+
+откр конст ETXTBSY: ц32 = 26
+
+откр конст EFBIG: ц32 = 27
+
+откр конст ENOSPC: ц32 = 28
+
+откр конст ESPIPE: ц32 = 29
+
+откр конст EROFS: ц32 = 30
+
+откр конст EMLINK: ц32 = 31
+
+откр конст EPIPE: ц32 = 32
+
+откр конст EDOM: ц32 = 33
+
+откр конст ERANGE: ц32 = 34
+
+откр конст EDEADLK: ц32 = 35
+
+откр конст ENAMETOOLONG: ц32 = 36
+
+откр конст ENOLCK: ц32 = 37
+
+откр конст ENOSYS: ц32 = 38
+
+откр конст ENOTEMPTY: ц32 = 39
+
+откр конст ELOOP: ц32 = 40
+
+откр конст EWOULDBLOCK: ц32 = 11
+
+откр конст ENOMSG: ц32 = 42
+
+откр конст EIDRM: ц32 = 43
+
+откр конст ECHRNG: ц32 = 44
+
+откр конст EL2NSYNC: ц32 = 45
+
+откр конст EL3HLT: ц32 = 46
+
+откр конст EL3RST: ц32 = 47
+
+откр конст ELNRNG: ц32 = 48
+
+откр конст EUNATCH: ц32 = 49
+
+откр конст ENOCSI: ц32 = 50
+
+откр конст EL2HLT: ц32 = 51
+
+откр конст EBADE: ц32 = 52
+
+откр конст EBADR: ц32 = 53
+
+откр конст EXFULL: ц32 = 54
+
+откр конст ENOANO: ц32 = 55
+
+откр конст EBADRQC: ц32 = 56
+
+откр конст EBADSLT: ц32 = 57
+
+откр конст EDEADLOCK: ц32 = 35
+
+откр конст EBFONT: ц32 = 59
+
+откр конст ENOSTR: ц32 = 60
+
+откр конст ENODATA: ц32 = 61
+
+откр конст ETIME: ц32 = 62
+
+откр конст ENOSR: ц32 = 63
+
+откр конст ENONET: ц32 = 64
+
+откр конст ENOPKG: ц32 = 65
+
+откр конст EREMOTE: ц32 = 66
+
+откр конст ENOLINK: ц32 = 67
+
+откр конст EADV: ц32 = 68
+
+откр конст ESRMNT: ц32 = 69
+
+откр конст ECOMM: ц32 = 70
+
+откр конст EPROTO: ц32 = 71
+
+откр конст EMULTIHOP: ц32 = 72
+
+откр конст EDOTDOT: ц32 = 73
+
+откр конст EBADMSG: ц32 = 74
+
+откр конст EOVERFLOW: ц32 = 75
+
+откр конст ENOTUNIQ: ц32 = 76
+
+откр конст EBADFD: ц32 = 77
+
+откр конст EREMCHG: ц32 = 78
+
+откр конст ELIBACC: ц32 = 79
+
+откр конст ELIBBAD: ц32 = 80
+
+откр конст ELIBSCN: ц32 = 81
+
+откр конст ELIBMAX: ц32 = 82
+
+откр конст ELIBEXEC: ц32 = 83
+
+откр конст EILSEQ: ц32 = 84
+
+откр конст ERESTART: ц32 = 85
+
+откр конст ESTRPIPE: ц32 = 86
+
+откр конст EUSERS: ц32 = 87
+
+откр конст ENOTSOCK: ц32 = 88
+
+откр конст EDESTADDRREQ: ц32 = 89
+
+откр конст EMSGSIZE: ц32 = 90
+
+откр конст EPROTOTYPE: ц32 = 91
+
+откр конст ENOPROTOOPT: ц32 = 92
+
+откр конст EPROTONOSUPPORT: ц32 = 93
+
+откр конст ESOCKTNOSUPPORT: ц32 = 94
+
+откр конст EOPNOTSUPP: ц32 = 95
+
+откр конст EPFNOSUPPORT: ц32 = 96
+
+откр конст EAFNOSUPPORT: ц32 = 97
+
+откр конст EADDRINUSE: ц32 = 98
+
+откр конст EADDRNOTAVAIL: ц32 = 99
+
+откр конст ENETDOWN: ц32 = 100
+
+откр конст ENETUNREACH: ц32 = 101
+
+откр конст ENETRESET: ц32 = 102
+
+откр конст ECONNABORTED: ц32 = 103
+
+откр конст ECONNRESET: ц32 = 104
+
+откр конст ENOBUFS: ц32 = 105
+
+откр конст EISCONN: ц32 = 106
+
+откр конст ENOTCONN: ц32 = 107
+
+откр конст ESHUTDOWN: ц32 = 108
+
+откр конст ETOOMANYREFS: ц32 = 109
+
+откр конст ETIMEDOUT: ц32 = 110
+
+откр конст ECONNREFUSED: ц32 = 111
+
+откр конст EHOSTDOWN: ц32 = 112
+
+откр конст EHOSTUNREACH: ц32 = 113
+
+откр конст EALREADY: ц32 = 114
+
+откр конст EINPROGRESS: ц32 = 115
+
+откр конст ESTALE: ц32 = 116
+
+откр конст EUCLEAN: ц32 = 117
+
+откр конст ENOTNAM: ц32 = 118
+
+откр конст ENAVAIL: ц32 = 119
+
+откр конст EISNAM: ц32 = 120
+
+откр конст EREMOTEIO: ц32 = 121
+
+откр конст EDQUOT: ц32 = 122
+
+откр конст ENOMEDIUM: ц32 = 123
+
+откр конст EMEDIUMTYPE: ц32 = 124
+
+откр конст ECANCELED: ц32 = 125
+
+откр конст ENOKEY: ц32 = 126
+
+откр конст EKEYEXPIRED: ц32 = 127
+
+откр конст EKEYREVOKED: ц32 = 128
+
+откр конст EKEYREJECTED: ц32 = 129
+
+откр конст EOWNERDEAD: ц32 = 130
+
+откр конст ENOTRECOVERABLE: ц32 = 131
+
+откр конст ERFKILL: ц32 = 132
+
+откр конст EHWPOISON: ц32 = 133
+
+откр конст ENOTSUP: ц32 = 95
+
+[ПеременнаяСи]
+откр конст errno: ц32 = 0

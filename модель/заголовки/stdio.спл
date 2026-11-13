@@ -1,0 +1,508 @@
+откр конст _Float32 = в32
+
+откр конст _Float32x = в64
+
+откр конст _Float64 = в64
+
+откр конст _IO_lock_t = пусто
+
+откр конст __FILE = FILE
+
+откр конст __blkcnt64_t = ц64
+
+откр конст __blkcnt_t = ц64
+
+откр конст __blksize_t = ц64
+
+откр конст __caddr_t = ?*н8
+
+откр конст __clock_t = ц64
+
+откр конст __clockid_t = ц32
+
+откр конст __daddr_t = ц32
+
+откр конст __dev_t = н64
+
+откр конст __fsblkcnt64_t = н64
+
+откр конст __fsblkcnt_t = н64
+
+откр конст __fsfilcnt64_t = н64
+
+откр конст __fsfilcnt_t = н64
+
+откр конст __fsword_t = ц64
+
+откр конст __gid_t = н32
+
+откр конст __id_t = н32
+
+откр конст __ino64_t = н64
+
+откр конст __ino_t = н64
+
+откр конст __int16_t = ц16
+
+откр конст __int32_t = ц32
+
+откр конст __int64_t = ц64
+
+откр конст __int8_t = ц8
+
+откр конст __int_least16_t = __int16_t
+
+откр конст __int_least32_t = __int32_t
+
+откр конст __int_least64_t = __int64_t
+
+откр конст __int_least8_t = __int8_t
+
+откр конст __intmax_t = ц64
+
+откр конст __intptr_t = ц64
+
+откр конст __key_t = ц32
+
+откр конст __loff_t = __off64_t
+
+откр конст __mode_t = н32
+
+откр конст __nlink_t = н64
+
+откр конст __off64_t = ц64
+
+откр конст __off_t = ц64
+
+откр конст __pid_t = ц32
+
+откр конст __quad_t = ц64
+
+откр конст __rlim64_t = н64
+
+откр конст __rlim_t = н64
+
+откр конст __sig_atomic_t = ц32
+
+откр конст __socklen_t = н32
+
+откр конст __ssize_t = ц64
+
+откр конст __suseconds64_t = ц64
+
+откр конст __suseconds_t = ц64
+
+откр конст __syscall_slong_t = ц64
+
+откр конст __syscall_ulong_t = н64
+
+откр конст __time_t = ц64
+
+откр конст __timer_t = ?*пусто
+
+откр конст __u_char = н8
+
+откр конст __u_int = н32
+
+откр конст __u_long = н64
+
+откр конст __u_quad_t = н64
+
+откр конст __u_short = н16
+
+откр конст __uid_t = н32
+
+откр конст __uint16_t = н16
+
+откр конст __uint32_t = н32
+
+откр конст __uint64_t = н64
+
+откр конст __uint8_t = н8
+
+откр конст __uint_least16_t = __uint16_t
+
+откр конст __uint_least32_t = __uint32_t
+
+откр конст __uint_least64_t = __uint64_t
+
+откр конст __uint_least8_t = __uint8_t
+
+откр конст __uintmax_t = н64
+
+откр конст __useconds_t = н32
+
+откр конст fpos_t = __fpos_t
+
+откр конст _G_fpos64_t = __fpos64_t
+
+откр конст _G_fpos_t = __fpos_t
+
+откр конст _IO_FILE = FILE
+
+[Си]
+откр структ FILE
+{
+    откр _flags: ц32
+    откр _IO_read_ptr: ?*н8
+    откр _IO_read_end: ?*н8
+    откр _IO_read_base: ?*н8
+    откр _IO_write_base: ?*н8
+    откр _IO_write_ptr: ?*н8
+    откр _IO_write_end: ?*н8
+    откр _IO_buf_base: ?*н8
+    откр _IO_buf_end: ?*н8
+    откр _IO_save_base: ?*н8
+    откр _IO_backup_base: ?*н8
+    откр _IO_save_end: ?*н8
+    откр _markers: ?*_IO_marker
+    откр _chain: ?*FILE
+    откр _fileno: ц32
+    откр _flags2: ц32
+    откр _old_offset: __off_t
+    откр _cur_column: н16
+    откр _vtable_offset: ц8
+    откр _shortbuf: [1]н8
+    откр _lock: ?*пусто
+    откр _offset: __off64_t
+    откр _codecvt: ?*_IO_codecvt
+    откр _wide_data: ?*_IO_wide_data
+    откр _freeres_list: ?*FILE
+    откр _freeres_buf: ?*пусто
+    откр __pad5: разм
+    откр _mode: ц32
+    откр _unused2: [20]н8
+}
+
+[Встроено]
+откр функ FILE.ноль() -> FILE
+
+[Си]
+откр структ _IO_codecvt
+{
+}
+
+[Си]
+откр структ _IO_marker
+{
+}
+
+[Си]
+откр структ _IO_wide_data
+{
+}
+
+[Си]
+откр структ __fpos64_t
+{
+    откр __pos: __off64_t
+    откр __state: __mbstate_t
+}
+
+[Встроено]
+откр функ __fpos64_t.ноль() -> __fpos64_t
+
+[Си]
+откр структ __fpos_t
+{
+    откр __pos: __off_t
+    откр __state: __mbstate_t
+}
+
+[Встроено]
+откр функ __fpos_t.ноль() -> __fpos_t
+
+[Си]
+откр структ __fsid_t
+{
+    откр __val: [2]ц32
+}
+
+[Встроено]
+откр функ __fsid_t.ноль() -> __fsid_t
+
+[Си]
+откр структ __mbstate_t
+{
+}
+
+откр внеш "C" функ __overflow(п1: ?*FILE, п2: ц32) -> ц32
+
+откр внеш "C" функ __uflow(п1: ?*FILE) -> ц32
+
+откр внеш "C" функ clearerr(__stream: ?*FILE)
+
+откр внеш "C" функ fclose(__stream: ?*FILE) -> ц32
+
+откр внеш "C" функ feof(__stream: ?*FILE) -> ц32
+
+откр внеш "C" функ ferror(__stream: ?*FILE) -> ц32
+
+откр внеш "C" функ fflush(__stream: ?*FILE) -> ц32
+
+откр внеш "C" функ fgetc(__stream: ?*FILE) -> ц32
+
+откр внеш "C" функ fgetpos(__stream: ?*FILE, __pos: ?*fpos_t) -> ц32
+
+откр внеш "C" функ fgets(__s: ?*н8, __n: ц32, __stream: ?*FILE) -> ?*н8
+
+откр внеш "C" функ fopen(__filename: ?*н8, __modes: ?*н8) -> ?*FILE
+
+откр внеш "C" функ fprintf(__stream: ?*FILE, __format: ?*н8, ...) -> ц32
+
+откр внеш "C" функ fputc(__c: ц32, __stream: ?*FILE) -> ц32
+
+откр внеш "C" функ fputs(__s: ?*н8, __stream: ?*FILE) -> ц32
+
+откр внеш "C" функ fread(__ptr: ?*пусто, __size: разм, __n: разм, __stream: ?*FILE) -> разм
+
+откр внеш "C" функ freopen(__filename: ?*н8, __modes: ?*н8, __stream: ?*FILE) -> ?*FILE
+
+откр внеш "C" функ fscanf(__stream: ?*FILE, __format: ?*н8, ...) -> ц32
+
+откр внеш "C" функ fseek(__stream: ?*FILE, __off: ц64, __whence: ц32) -> ц32
+
+откр внеш "C" функ fsetpos(__stream: ?*FILE, __pos: ?*fpos_t) -> ц32
+
+откр внеш "C" функ ftell(__stream: ?*FILE) -> ц64
+
+откр внеш "C" функ fwrite(__ptr: ?*пусто, __size: разм, __n: разм, __s: ?*FILE) -> разм
+
+откр внеш "C" функ getc(__stream: ?*FILE) -> ц32
+
+откр внеш "C" функ getchar() -> ц32
+
+откр внеш "C" функ perror(__s: ?*н8)
+
+откр внеш "C" функ printf(__format: ?*н8, ...) -> ц32
+
+откр внеш "C" функ putc(__c: ц32, __stream: ?*FILE) -> ц32
+
+откр внеш "C" функ putchar(__c: ц32) -> ц32
+
+откр внеш "C" функ puts(__s: ?*н8) -> ц32
+
+откр внеш "C" функ remove(__filename: ?*н8) -> ц32
+
+откр внеш "C" функ rename(__old: ?*н8, __new: ?*н8) -> ц32
+
+откр внеш "C" функ rewind(__stream: ?*FILE)
+
+откр внеш "C" функ scanf(__format: ?*н8, ...) -> ц32
+
+откр внеш "C" функ setbuf(__stream: ?*FILE, __buf: ?*н8)
+
+откр внеш "C" функ setvbuf(__stream: ?*FILE, __buf: ?*н8, __modes: ц32, __n: разм) -> ц32
+
+откр внеш "C" функ snprintf(__s: ?*н8, __maxlen: разм, __format: ?*н8, ...) -> ц32
+
+откр внеш "C" функ sprintf(__s: ?*н8, __format: ?*н8, ...) -> ц32
+
+откр внеш "C" функ sscanf(__s: ?*н8, __format: ?*н8, ...) -> ц32
+
+откр внеш "C" функ tmpfile() -> ?*FILE
+
+откр внеш "C" функ tmpnam(п1: ?*н8) -> ?*н8
+
+откр внеш "C" функ ungetc(__c: ц32, __stream: ?*FILE) -> ц32
+
+[ПеременнаяСи]
+откр конст stderr: ?*FILE = Ничего
+
+[ПеременнаяСи]
+откр конст stdin: ?*FILE = Ничего
+
+[ПеременнаяСи]
+откр конст stdout: ?*FILE = Ничего
+
+откр конст _STDIO_H: ц32 = 1
+
+откр конст _FEATURES_H: ц32 = 1
+
+откр конст __GLIBC_USE_ISOC2X: ц32 = 0
+
+откр конст __USE_ISOC11: ц32 = 1
+
+откр конст __USE_ISOC99: ц32 = 1
+
+откр конст __USE_ISOC95: ц32 = 1
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __TIMESIZE: ц32 = 64
+
+откр конст __USE_FORTIFY_LEVEL: ц32 = 0
+
+откр конст __GLIBC_USE_DEPRECATED_GETS: ц32 = 0
+
+откр конст __GLIBC_USE_DEPRECATED_SCANF: ц32 = 0
+
+откр конст __GLIBC_USE_C2X_STRTOL: ц32 = 0
+
+откр конст _STDC_PREDEF_H: ц32 = 1
+
+откр конст __STDC_IEC_559__: ц32 = 1
+
+откр конст __STDC_IEC_60559_BFP__: ц64 = 201404
+
+откр конст __STDC_IEC_559_COMPLEX__: ц32 = 1
+
+откр конст __STDC_IEC_60559_COMPLEX__: ц64 = 201404
+
+откр конст __STDC_ISO_10646__: ц64 = 201706
+
+откр конст __GNU_LIBRARY__: ц32 = 6
+
+откр конст __GLIBC__: ц32 = 2
+
+откр конст __GLIBC_MINOR__: ц32 = 39
+
+откр конст _SYS_CDEFS_H: ц32 = 1
+
+откр конст __glibc_c99_flexarr_available: ц32 = 1
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI: ц32 = 0
+
+откр конст __HAVE_GENERIC_SELECTION: ц32 = 1
+
+откр конст __GLIBC_USE_LIB_EXT2: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_BFP_EXT: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_BFP_EXT_C2X: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_EXT: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_FUNCS_EXT: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_FUNCS_EXT_C2X: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_TYPES_EXT: ц32 = 0
+
+откр конст _BITS_TYPES_H: ц32 = 1
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __TIMESIZE: ц32 = 64
+
+откр конст _BITS_TYPESIZES_H: ц32 = 1
+
+откр конст __OFF_T_MATCHES_OFF64_T: ц32 = 1
+
+откр конст __INO_T_MATCHES_INO64_T: ц32 = 1
+
+откр конст __RLIM_T_MATCHES_RLIM64_T: ц32 = 1
+
+откр конст __STATFS_MATCHES_STATFS64: ц32 = 1
+
+откр конст __KERNEL_OLD_TIMEVAL_MATCHES_TIMEVAL64: ц32 = 1
+
+откр конст __FD_SETSIZE: ц32 = 1024
+
+откр конст _BITS_TIME64_H: ц32 = 1
+
+откр конст _____fpos_t_defined: ц32 = 1
+
+откр конст ____mbstate_t_defined: ц32 = 1
+
+откр конст _____fpos64_t_defined: ц32 = 1
+
+откр конст ____FILE_defined: ц32 = 1
+
+откр конст __FILE_defined: ц32 = 1
+
+откр конст __struct_FILE_defined: ц32 = 1
+
+откр конст _IO_EOF_SEEN: ц32 = 16
+
+откр конст _IO_ERR_SEEN: ц32 = 32
+
+откр конст _IO_USER_LOCK: ц32 = 32768
+
+откр конст _IOFBF: ц32 = 0
+
+откр конст _IOLBF: ц32 = 1
+
+откр конст _IONBF: ц32 = 2
+
+откр конст BUFSIZ: ц32 = 8192
+
+откр конст EOF: ц32 = -1
+
+откр конст SEEK_SET: ц32 = 0
+
+откр конст SEEK_CUR: ц32 = 1
+
+откр конст SEEK_END: ц32 = 2
+
+откр конст L_tmpnam: ц32 = 20
+
+откр конст TMP_MAX: ц32 = 238328
+
+откр конст _BITS_STDIO_LIM_H: ц32 = 1
+
+откр конст FILENAME_MAX: ц32 = 4096
+
+откр конст FOPEN_MAX: ц32 = 16
+
+откр конст __HAVE_FLOAT128: ц32 = 0
+
+откр конст __HAVE_DISTINCT_FLOAT128: ц32 = 0
+
+откр конст __HAVE_FLOAT64X: ц32 = 1
+
+откр конст __HAVE_FLOAT64X_LONG_DOUBLE: ц32 = 1
+
+откр конст __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI: ц32 = 0
+
+откр конст __HAVE_FLOAT16: ц32 = 0
+
+откр конст __HAVE_FLOAT32: ц32 = 1
+
+откр конст __HAVE_FLOAT64: ц32 = 1
+
+откр конст __HAVE_FLOAT32X: ц32 = 1
+
+откр конст __HAVE_FLOAT128X: ц32 = 0
+
+откр конст __HAVE_DISTINCT_FLOAT16: ц32 = 0
+
+откр конст __HAVE_DISTINCT_FLOAT32: ц32 = 0
+
+откр конст __HAVE_DISTINCT_FLOAT64: ц32 = 0
+
+откр конст __HAVE_DISTINCT_FLOAT32X: ц32 = 0
+
+откр конст __HAVE_DISTINCT_FLOAT64X: ц32 = 0
+
+откр конст __HAVE_DISTINCT_FLOAT128X: ц32 = 0
+
+откр конст __HAVE_FLOAT128_UNLIKE_LDBL: ц32 = 0
+
+откр конст __HAVE_FLOATN_NOT_TYPEDEF: ц32 = 0

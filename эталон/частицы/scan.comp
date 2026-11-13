@@ -1,0 +1,68 @@
+#version 450
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer Source { uint source[]; };
+layout(std430, binding = 1) writeonly buffer Target { uint target[]; };
+layout(std430, binding = 2) readonly buffer Offsets { uint offsets[]; };
+
+layout(push_constant) uniform Extent
+{
+    uint count;
+} extent;
+
+const uint THREADS = 256u;
+const uint PER_THREAD = 4u;
+const uint BLOCK = THREADS * PER_THREAD;
+
+shared uint items[BLOCK];
+shared uint partial[THREADS];
+
+void main()
+{
+    uint local = gl_LocalInvocationID.x;
+    uint blockBase = gl_WorkGroupID.x * BLOCK;
+    for (uint item = 0u; item < PER_THREAD; ++item)
+    {
+        uint slot = local + item * THREADS;
+        uint index = blockBase + slot;
+        items[slot] = index < extent.count ? source[index] : 0u;
+    }
+    barrier();
+
+    uint first = local * PER_THREAD;
+    uint running = 0u;
+    for (uint item = 0u; item < PER_THREAD; ++item)
+    {
+        uint value = items[first + item];
+        items[first + item] = running;
+        running += value;
+    }
+    partial[local] = running;
+    barrier();
+
+    for (uint offset = 1u; offset < THREADS; offset <<= 1u)
+    {
+        uint addend = local >= offset ? partial[local - offset] : 0u;
+        barrier();
+        partial[local] += addend;
+        barrier();
+    }
+
+    uint before = partial[local] - running + offsets[gl_WorkGroupID.x];
+    for (uint item = 0u; item < PER_THREAD; ++item)
+    {
+        items[first + item] += before;
+    }
+    barrier();
+
+    for (uint item = 0u; item < PER_THREAD; ++item)
+    {
+        uint slot = local + item * THREADS;
+        uint index = blockBase + slot;
+        if (index < extent.count)
+        {
+            target[index] = items[slot];
+        }
+    }
+}

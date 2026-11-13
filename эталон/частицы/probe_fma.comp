@@ -1,0 +1,50 @@
+#version 450
+#extension GL_EXT_spirv_intrinsics : require
+#extension GL_GOOGLE_include_directive : require
+
+layout(local_size_x = 256, local_size_y = 1, local_size_z = 1) in;
+
+layout(std430, binding = 0) readonly buffer FmaIn
+{
+    uint fmaIn[];
+};
+
+layout(std430, binding = 1) writeonly buffer FmaOut
+{
+    uint fmaOut[];
+};
+
+layout(push_constant) uniform FmaSize
+{
+    uint tripleCount;
+} fmaSize;
+
+#include "strict.glsl"
+#include "soft_fma.glsl"
+
+#ifdef FMA_KHR
+spirv_instruction(extensions = ["SPV_KHR_fma"], capabilities = [6030], id = 4427)
+float fmaCorrectlyRounded(float multiplicand, float multiplier, float addend);
+#endif
+
+void main()
+{
+    uint idx = gl_GlobalInvocationID.x;
+    if (idx >= fmaSize.tripleCount)
+    {
+        return;
+    }
+    uint base = 3u * idx;
+    uint bitsA = fmaIn[base];
+    uint bitsB = fmaIn[base + 1u];
+    uint bitsC = fmaIn[base + 2u];
+    precise float fused = fma(uintBitsToFloat(bitsA), uintBitsToFloat(bitsB), uintBitsToFloat(bitsC));
+    fmaOut[base] = floatBitsToUint(fused);
+    fmaOut[base + 1u] = softFmaBits(bitsA, bitsB, bitsC);
+#ifdef FMA_KHR
+    precise float rounded = fmaCorrectlyRounded(uintBitsToFloat(bitsA), uintBitsToFloat(bitsB), uintBitsToFloat(bitsC));
+    fmaOut[base + 2u] = floatBitsToUint(rounded);
+#else
+    fmaOut[base + 2u] = 0u;
+#endif
+}

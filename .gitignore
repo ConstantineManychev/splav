@@ -1,0 +1,5 @@
+*.exe
+*.spv
+*.o
+*.obj
+__pycache__/

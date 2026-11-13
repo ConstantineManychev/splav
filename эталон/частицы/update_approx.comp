@@ -1,0 +1,11 @@
+#version 450
+#extension GL_EXT_spirv_intrinsics : require
+#extension GL_GOOGLE_include_directive : require
+
+#include "strict.glsl"
+#include "approx.glsl"
+
+#define DIVIDE(numerator, denominator) approxDiv(numerator, denominator)
+#define ROOT(value) approxSqrt(value)
+
+#include "update_kernel.glsl"

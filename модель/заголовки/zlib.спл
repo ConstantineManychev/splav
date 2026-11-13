@@ -1,0 +1,1586 @@
+откр конст Byte = н8
+
+откр конст Bytef = Byte
+
+откр конст __blkcnt64_t = ц64
+
+откр конст __blkcnt_t = ц64
+
+откр конст __blksize_t = ц64
+
+откр конст __caddr_t = ?*н8
+
+откр конст __clock_t = ц64
+
+откр конст __clockid_t = ц32
+
+откр конст __daddr_t = ц32
+
+откр конст __dev_t = н64
+
+откр конст __fsblkcnt64_t = н64
+
+откр конст __fsblkcnt_t = н64
+
+откр конст __fsfilcnt64_t = н64
+
+откр конст __fsfilcnt_t = н64
+
+откр конст __fsword_t = ц64
+
+откр конст __gid_t = н32
+
+откр конст __id_t = н32
+
+откр конст __ino64_t = н64
+
+откр конст __ino_t = н64
+
+откр конст __int16_t = ц16
+
+откр конст __int32_t = ц32
+
+откр конст __int64_t = ц64
+
+откр конст __int8_t = ц8
+
+откр конст __int_least16_t = __int16_t
+
+откр конст __int_least32_t = __int32_t
+
+откр конст __int_least64_t = __int64_t
+
+откр конст __int_least8_t = __int8_t
+
+откр конст __intmax_t = ц64
+
+откр конст __intptr_t = ц64
+
+откр конст __key_t = ц32
+
+откр конст __loff_t = __off64_t
+
+откр конст __mode_t = н32
+
+откр конст __nlink_t = н64
+
+откр конст __off64_t = ц64
+
+откр конст __off_t = ц64
+
+откр конст __pid_t = ц32
+
+откр конст __quad_t = ц64
+
+откр конст __rlim64_t = н64
+
+откр конст __rlim_t = н64
+
+откр конст __sig_atomic_t = ц32
+
+откр конст __socklen_t = н32
+
+откр конст __ssize_t = ц64
+
+откр конст __suseconds64_t = ц64
+
+откр конст __suseconds_t = ц64
+
+откр конст __syscall_slong_t = ц64
+
+откр конст __syscall_ulong_t = н64
+
+откр конст __time_t = ц64
+
+откр конст __timer_t = ?*пусто
+
+откр конст __u_char = н8
+
+откр конст __u_int = н32
+
+откр конст __u_long = н64
+
+откр конст __u_quad_t = н64
+
+откр конст __u_short = н16
+
+откр конст __uid_t = н32
+
+откр конст __uint16_t = н16
+
+откр конст __uint32_t = н32
+
+откр конст __uint64_t = н64
+
+откр конст __uint8_t = н8
+
+откр конст __uint_least16_t = __uint16_t
+
+откр конст __uint_least32_t = __uint32_t
+
+откр конст __uint_least64_t = __uint64_t
+
+откр конст __uint_least8_t = __uint8_t
+
+откр конст __uintmax_t = н64
+
+откр конст __useconds_t = н32
+
+откр конст alloc_func = ?внеш "C" функ(voidpf, uInt, uInt) -> voidpf
+
+откр конст blkcnt_t = __blkcnt_t
+
+откр конст charf = н8
+
+откр конст clockid_t = __clockid_t
+
+откр конст dev_t = __dev_t
+
+откр конст free_func = ?внеш "C" функ(voidpf, voidpf)
+
+откр конст fsblkcnt_t = __fsblkcnt_t
+
+откр конст fsfilcnt_t = __fsfilcnt_t
+
+откр конст gid_t = __gid_t
+
+откр конст gzFile = ?*gzFile_s
+
+откр конст gz_headerp = ?*gz_header
+
+откр конст in_func = ?внеш "C" функ(?*пусто, ?*?*н8) -> н32
+
+откр конст ino_t = __ino_t
+
+откр конст intf = ц32
+
+откр конст mode_t = __mode_t
+
+откр конст nlink_t = __nlink_t
+
+откр конст off_t = __off_t
+
+откр конст out_func = ?внеш "C" функ(?*пусто, ?*н8, н32) -> ц32
+
+откр конст pid_t = __pid_t
+
+откр конст register_t = ц64
+
+откр конст time_t = __time_t
+
+откр конст timer_t = __timer_t
+
+откр конст uInt = н32
+
+откр конст uIntf = uInt
+
+откр конст uLong = н64
+
+откр конст uLongf = uLong
+
+откр конст u_int16_t = __uint16_t
+
+откр конст u_int32_t = __uint32_t
+
+откр конст u_int64_t = __uint64_t
+
+откр конст u_int8_t = __uint8_t
+
+откр конст uid_t = __uid_t
+
+откр конст voidp = ?*пусто
+
+откр конст voidpc = ?*пусто
+
+откр конст voidpf = ?*пусто
+
+откр конст wchar_t = ц32
+
+откр конст z_crc_t = н32
+
+откр конст z_size_t = разм
+
+откр конст z_streamp = ?*z_stream
+
+откр конст gz_header_s = gz_header
+
+откр конст z_stream_s = z_stream
+
+[Си]
+откр структ __fsid_t
+{
+    откр __val: [2]ц32
+}
+
+[Встроено]
+откр функ __fsid_t.ноль() -> __fsid_t
+
+[Си]
+откр структ gzFile_s
+{
+    откр have: н32
+    откр next: ?*н8
+    откр pos: off_t
+}
+
+[Встроено]
+откр функ gzFile_s.ноль() -> gzFile_s
+
+[Си]
+откр структ gz_header
+{
+    откр text: ц32
+    откр time: uLong
+    откр xflags: ц32
+    откр os: ц32
+    откр extra: ?*Bytef
+    откр extra_len: uInt
+    откр extra_max: uInt
+    откр name: ?*Bytef
+    откр name_max: uInt
+    откр comment: ?*Bytef
+    откр comm_max: uInt
+    откр hcrc: ц32
+    откр done: ц32
+}
+
+[Встроено]
+откр функ gz_header.ноль() -> gz_header
+
+[Си]
+откр структ internal_state
+{
+}
+
+[Си]
+откр структ max_align_t
+{
+}
+
+[Си]
+откр структ z_stream
+{
+    откр next_in: ?*Bytef
+    откр avail_in: uInt
+    откр total_in: uLong
+    откр next_out: ?*Bytef
+    откр avail_out: uInt
+    откр total_out: uLong
+    откр msg: ?*н8
+    откр state: ?*internal_state
+    откр zalloc: alloc_func
+    откр zfree: free_func
+    откр opaque: voidpf
+    откр data_type: ц32
+    откр adler: uLong
+    откр reserved: uLong
+}
+
+[Встроено]
+откр функ z_stream.ноль() -> z_stream
+
+откр конст _CS_GNU_LIBC_VERSION: н32 = 2
+
+откр конст _CS_GNU_LIBPTHREAD_VERSION: н32 = 3
+
+откр конст _CS_LFS64_CFLAGS: н32 = 1004
+
+откр конст _CS_LFS64_LDFLAGS: н32 = 1005
+
+откр конст _CS_LFS64_LIBS: н32 = 1006
+
+откр конст _CS_LFS64_LINTFLAGS: н32 = 1007
+
+откр конст _CS_LFS_CFLAGS: н32 = 1000
+
+откр конст _CS_LFS_LDFLAGS: н32 = 1001
+
+откр конст _CS_LFS_LIBS: н32 = 1002
+
+откр конст _CS_LFS_LINTFLAGS: н32 = 1003
+
+откр конст _CS_PATH: н32 = 0
+
+откр конст _CS_POSIX_V6_ILP32_OFF32_CFLAGS: н32 = 1116
+
+откр конст _CS_POSIX_V6_ILP32_OFF32_LDFLAGS: н32 = 1117
+
+откр конст _CS_POSIX_V6_ILP32_OFF32_LIBS: н32 = 1118
+
+откр конст _CS_POSIX_V6_ILP32_OFF32_LINTFLAGS: н32 = 1119
+
+откр конст _CS_POSIX_V6_ILP32_OFFBIG_CFLAGS: н32 = 1120
+
+откр конст _CS_POSIX_V6_ILP32_OFFBIG_LDFLAGS: н32 = 1121
+
+откр конст _CS_POSIX_V6_ILP32_OFFBIG_LIBS: н32 = 1122
+
+откр конст _CS_POSIX_V6_ILP32_OFFBIG_LINTFLAGS: н32 = 1123
+
+откр конст _CS_POSIX_V6_LP64_OFF64_CFLAGS: н32 = 1124
+
+откр конст _CS_POSIX_V6_LP64_OFF64_LDFLAGS: н32 = 1125
+
+откр конст _CS_POSIX_V6_LP64_OFF64_LIBS: н32 = 1126
+
+откр конст _CS_POSIX_V6_LP64_OFF64_LINTFLAGS: н32 = 1127
+
+откр конст _CS_POSIX_V6_LPBIG_OFFBIG_CFLAGS: н32 = 1128
+
+откр конст _CS_POSIX_V6_LPBIG_OFFBIG_LDFLAGS: н32 = 1129
+
+откр конст _CS_POSIX_V6_LPBIG_OFFBIG_LIBS: н32 = 1130
+
+откр конст _CS_POSIX_V6_LPBIG_OFFBIG_LINTFLAGS: н32 = 1131
+
+откр конст _CS_POSIX_V7_ILP32_OFF32_CFLAGS: н32 = 1132
+
+откр конст _CS_POSIX_V7_ILP32_OFF32_LDFLAGS: н32 = 1133
+
+откр конст _CS_POSIX_V7_ILP32_OFF32_LIBS: н32 = 1134
+
+откр конст _CS_POSIX_V7_ILP32_OFF32_LINTFLAGS: н32 = 1135
+
+откр конст _CS_POSIX_V7_ILP32_OFFBIG_CFLAGS: н32 = 1136
+
+откр конст _CS_POSIX_V7_ILP32_OFFBIG_LDFLAGS: н32 = 1137
+
+откр конст _CS_POSIX_V7_ILP32_OFFBIG_LIBS: н32 = 1138
+
+откр конст _CS_POSIX_V7_ILP32_OFFBIG_LINTFLAGS: н32 = 1139
+
+откр конст _CS_POSIX_V7_LP64_OFF64_CFLAGS: н32 = 1140
+
+откр конст _CS_POSIX_V7_LP64_OFF64_LDFLAGS: н32 = 1141
+
+откр конст _CS_POSIX_V7_LP64_OFF64_LIBS: н32 = 1142
+
+откр конст _CS_POSIX_V7_LP64_OFF64_LINTFLAGS: н32 = 1143
+
+откр конст _CS_POSIX_V7_LPBIG_OFFBIG_CFLAGS: н32 = 1144
+
+откр конст _CS_POSIX_V7_LPBIG_OFFBIG_LDFLAGS: н32 = 1145
+
+откр конст _CS_POSIX_V7_LPBIG_OFFBIG_LIBS: н32 = 1146
+
+откр конст _CS_POSIX_V7_LPBIG_OFFBIG_LINTFLAGS: н32 = 1147
+
+откр конст _CS_V5_WIDTH_RESTRICTED_ENVS: н32 = 4
+
+откр конст _CS_V6_ENV: н32 = 1148
+
+откр конст _CS_V6_WIDTH_RESTRICTED_ENVS: н32 = 1
+
+откр конст _CS_V7_ENV: н32 = 1149
+
+откр конст _CS_V7_WIDTH_RESTRICTED_ENVS: н32 = 5
+
+откр конст _CS_XBS5_ILP32_OFF32_CFLAGS: н32 = 1100
+
+откр конст _CS_XBS5_ILP32_OFF32_LDFLAGS: н32 = 1101
+
+откр конст _CS_XBS5_ILP32_OFF32_LIBS: н32 = 1102
+
+откр конст _CS_XBS5_ILP32_OFF32_LINTFLAGS: н32 = 1103
+
+откр конст _CS_XBS5_ILP32_OFFBIG_CFLAGS: н32 = 1104
+
+откр конст _CS_XBS5_ILP32_OFFBIG_LDFLAGS: н32 = 1105
+
+откр конст _CS_XBS5_ILP32_OFFBIG_LIBS: н32 = 1106
+
+откр конст _CS_XBS5_ILP32_OFFBIG_LINTFLAGS: н32 = 1107
+
+откр конст _CS_XBS5_LP64_OFF64_CFLAGS: н32 = 1108
+
+откр конст _CS_XBS5_LP64_OFF64_LDFLAGS: н32 = 1109
+
+откр конст _CS_XBS5_LP64_OFF64_LIBS: н32 = 1110
+
+откр конст _CS_XBS5_LP64_OFF64_LINTFLAGS: н32 = 1111
+
+откр конст _CS_XBS5_LPBIG_OFFBIG_CFLAGS: н32 = 1112
+
+откр конст _CS_XBS5_LPBIG_OFFBIG_LDFLAGS: н32 = 1113
+
+откр конст _CS_XBS5_LPBIG_OFFBIG_LIBS: н32 = 1114
+
+откр конст _CS_XBS5_LPBIG_OFFBIG_LINTFLAGS: н32 = 1115
+
+откр конст _PC_2_SYMLINKS: н32 = 20
+
+откр конст _PC_ALLOC_SIZE_MIN: н32 = 18
+
+откр конст _PC_ASYNC_IO: н32 = 10
+
+откр конст _PC_CHOWN_RESTRICTED: н32 = 6
+
+откр конст _PC_FILESIZEBITS: н32 = 13
+
+откр конст _PC_LINK_MAX: н32 = 0
+
+откр конст _PC_MAX_CANON: н32 = 1
+
+откр конст _PC_MAX_INPUT: н32 = 2
+
+откр конст _PC_NAME_MAX: н32 = 3
+
+откр конст _PC_NO_TRUNC: н32 = 7
+
+откр конст _PC_PATH_MAX: н32 = 4
+
+откр конст _PC_PIPE_BUF: н32 = 5
+
+откр конст _PC_PRIO_IO: н32 = 11
+
+откр конст _PC_REC_INCR_XFER_SIZE: н32 = 14
+
+откр конст _PC_REC_MAX_XFER_SIZE: н32 = 15
+
+откр конст _PC_REC_MIN_XFER_SIZE: н32 = 16
+
+откр конст _PC_REC_XFER_ALIGN: н32 = 17
+
+откр конст _PC_SOCK_MAXBUF: н32 = 12
+
+откр конст _PC_SYMLINK_MAX: н32 = 19
+
+откр конст _PC_SYNC_IO: н32 = 9
+
+откр конст _PC_VDISABLE: н32 = 8
+
+откр конст _SC_2_CHAR_TERM: н32 = 95
+
+откр конст _SC_2_C_BIND: н32 = 47
+
+откр конст _SC_2_C_DEV: н32 = 48
+
+откр конст _SC_2_C_VERSION: н32 = 96
+
+откр конст _SC_2_FORT_DEV: н32 = 49
+
+откр конст _SC_2_FORT_RUN: н32 = 50
+
+откр конст _SC_2_LOCALEDEF: н32 = 52
+
+откр конст _SC_2_PBS: н32 = 168
+
+откр конст _SC_2_PBS_ACCOUNTING: н32 = 169
+
+откр конст _SC_2_PBS_CHECKPOINT: н32 = 175
+
+откр конст _SC_2_PBS_LOCATE: н32 = 170
+
+откр конст _SC_2_PBS_MESSAGE: н32 = 171
+
+откр конст _SC_2_PBS_TRACK: н32 = 172
+
+откр конст _SC_2_SW_DEV: н32 = 51
+
+откр конст _SC_2_UPE: н32 = 97
+
+откр конст _SC_2_VERSION: н32 = 46
+
+откр конст _SC_ADVISORY_INFO: н32 = 132
+
+откр конст _SC_AIO_LISTIO_MAX: н32 = 23
+
+откр конст _SC_AIO_MAX: н32 = 24
+
+откр конст _SC_AIO_PRIO_DELTA_MAX: н32 = 25
+
+откр конст _SC_ARG_MAX: н32 = 0
+
+откр конст _SC_ASYNCHRONOUS_IO: н32 = 12
+
+откр конст _SC_ATEXIT_MAX: н32 = 87
+
+откр конст _SC_AVPHYS_PAGES: н32 = 86
+
+откр конст _SC_BARRIERS: н32 = 133
+
+откр конст _SC_BASE: н32 = 134
+
+откр конст _SC_BC_BASE_MAX: н32 = 36
+
+откр конст _SC_BC_DIM_MAX: н32 = 37
+
+откр конст _SC_BC_SCALE_MAX: н32 = 38
+
+откр конст _SC_BC_STRING_MAX: н32 = 39
+
+откр конст _SC_CHARCLASS_NAME_MAX: н32 = 45
+
+откр конст _SC_CHAR_BIT: н32 = 101
+
+откр конст _SC_CHAR_MAX: н32 = 102
+
+откр конст _SC_CHAR_MIN: н32 = 103
+
+откр конст _SC_CHILD_MAX: н32 = 1
+
+откр конст _SC_CLK_TCK: н32 = 2
+
+откр конст _SC_CLOCK_SELECTION: н32 = 137
+
+откр конст _SC_COLL_WEIGHTS_MAX: н32 = 40
+
+откр конст _SC_CPUTIME: н32 = 138
+
+откр конст _SC_C_LANG_SUPPORT: н32 = 135
+
+откр конст _SC_C_LANG_SUPPORT_R: н32 = 136
+
+откр конст _SC_DELAYTIMER_MAX: н32 = 26
+
+откр конст _SC_DEVICE_IO: н32 = 140
+
+откр конст _SC_DEVICE_SPECIFIC: н32 = 141
+
+откр конст _SC_DEVICE_SPECIFIC_R: н32 = 142
+
+откр конст _SC_EQUIV_CLASS_MAX: н32 = 41
+
+откр конст _SC_EXPR_NEST_MAX: н32 = 42
+
+откр конст _SC_FD_MGMT: н32 = 143
+
+откр конст _SC_FIFO: н32 = 144
+
+откр конст _SC_FILE_ATTRIBUTES: н32 = 146
+
+откр конст _SC_FILE_LOCKING: н32 = 147
+
+откр конст _SC_FILE_SYSTEM: н32 = 148
+
+откр конст _SC_FSYNC: н32 = 15
+
+откр конст _SC_GETGR_R_SIZE_MAX: н32 = 69
+
+откр конст _SC_GETPW_R_SIZE_MAX: н32 = 70
+
+откр конст _SC_HOST_NAME_MAX: н32 = 180
+
+откр конст _SC_INT_MAX: н32 = 104
+
+откр конст _SC_INT_MIN: н32 = 105
+
+откр конст _SC_IOV_MAX: н32 = 60
+
+откр конст _SC_IPV6: н32 = 235
+
+откр конст _SC_JOB_CONTROL: н32 = 7
+
+откр конст _SC_LEVEL1_DCACHE_ASSOC: н32 = 189
+
+откр конст _SC_LEVEL1_DCACHE_LINESIZE: н32 = 190
+
+откр конст _SC_LEVEL1_DCACHE_SIZE: н32 = 188
+
+откр конст _SC_LEVEL1_ICACHE_ASSOC: н32 = 186
+
+откр конст _SC_LEVEL1_ICACHE_LINESIZE: н32 = 187
+
+откр конст _SC_LEVEL1_ICACHE_SIZE: н32 = 185
+
+откр конст _SC_LEVEL2_CACHE_ASSOC: н32 = 192
+
+откр конст _SC_LEVEL2_CACHE_LINESIZE: н32 = 193
+
+откр конст _SC_LEVEL2_CACHE_SIZE: н32 = 191
+
+откр конст _SC_LEVEL3_CACHE_ASSOC: н32 = 195
+
+откр конст _SC_LEVEL3_CACHE_LINESIZE: н32 = 196
+
+откр конст _SC_LEVEL3_CACHE_SIZE: н32 = 194
+
+откр конст _SC_LEVEL4_CACHE_ASSOC: н32 = 198
+
+откр конст _SC_LEVEL4_CACHE_LINESIZE: н32 = 199
+
+откр конст _SC_LEVEL4_CACHE_SIZE: н32 = 197
+
+откр конст _SC_LINE_MAX: н32 = 43
+
+откр конст _SC_LOGIN_NAME_MAX: н32 = 71
+
+откр конст _SC_LONG_BIT: н32 = 106
+
+откр конст _SC_MAPPED_FILES: н32 = 16
+
+откр конст _SC_MB_LEN_MAX: н32 = 108
+
+откр конст _SC_MEMLOCK: н32 = 17
+
+откр конст _SC_MEMLOCK_RANGE: н32 = 18
+
+откр конст _SC_MEMORY_PROTECTION: н32 = 19
+
+откр конст _SC_MESSAGE_PASSING: н32 = 20
+
+откр конст _SC_MINSIGSTKSZ: н32 = 249
+
+откр конст _SC_MONOTONIC_CLOCK: н32 = 149
+
+откр конст _SC_MQ_OPEN_MAX: н32 = 27
+
+откр конст _SC_MQ_PRIO_MAX: н32 = 28
+
+откр конст _SC_MULTI_PROCESS: н32 = 150
+
+откр конст _SC_NETWORKING: н32 = 152
+
+откр конст _SC_NGROUPS_MAX: н32 = 3
+
+откр конст _SC_NL_ARGMAX: н32 = 119
+
+откр конст _SC_NL_LANGMAX: н32 = 120
+
+откр конст _SC_NL_MSGMAX: н32 = 121
+
+откр конст _SC_NL_NMAX: н32 = 122
+
+откр конст _SC_NL_SETMAX: н32 = 123
+
+откр конст _SC_NL_TEXTMAX: н32 = 124
+
+откр конст _SC_NPROCESSORS_CONF: н32 = 83
+
+откр конст _SC_NPROCESSORS_ONLN: н32 = 84
+
+откр конст _SC_NZERO: н32 = 109
+
+откр конст _SC_OPEN_MAX: н32 = 4
+
+откр конст _SC_PAGESIZE: н32 = 30
+
+откр конст _SC_PASS_MAX: н32 = 88
+
+откр конст _SC_PHYS_PAGES: н32 = 85
+
+откр конст _SC_PII: н32 = 53
+
+откр конст _SC_PII_INTERNET: н32 = 56
+
+откр конст _SC_PII_INTERNET_DGRAM: н32 = 62
+
+откр конст _SC_PII_INTERNET_STREAM: н32 = 61
+
+откр конст _SC_PII_OSI: н32 = 57
+
+откр конст _SC_PII_OSI_CLTS: н32 = 64
+
+откр конст _SC_PII_OSI_COTS: н32 = 63
+
+откр конст _SC_PII_OSI_M: н32 = 65
+
+откр конст _SC_PII_SOCKET: н32 = 55
+
+откр конст _SC_PII_XTI: н32 = 54
+
+откр конст _SC_PIPE: н32 = 145
+
+откр конст _SC_POLL: н32 = 58
+
+откр конст _SC_PRIORITIZED_IO: н32 = 13
+
+откр конст _SC_PRIORITY_SCHEDULING: н32 = 10
+
+откр конст _SC_RAW_SOCKETS: н32 = 236
+
+откр конст _SC_READER_WRITER_LOCKS: н32 = 153
+
+откр конст _SC_REALTIME_SIGNALS: н32 = 9
+
+откр конст _SC_REGEXP: н32 = 155
+
+откр конст _SC_REGEX_VERSION: н32 = 156
+
+откр конст _SC_RE_DUP_MAX: н32 = 44
+
+откр конст _SC_RTSIG_MAX: н32 = 31
+
+откр конст _SC_SAVED_IDS: н32 = 8
+
+откр конст _SC_SCHAR_MAX: н32 = 111
+
+откр конст _SC_SCHAR_MIN: н32 = 112
+
+откр конст _SC_SELECT: н32 = 59
+
+откр конст _SC_SEMAPHORES: н32 = 21
+
+откр конст _SC_SEM_NSEMS_MAX: н32 = 32
+
+откр конст _SC_SEM_VALUE_MAX: н32 = 33
+
+откр конст _SC_SHARED_MEMORY_OBJECTS: н32 = 22
+
+откр конст _SC_SHELL: н32 = 157
+
+откр конст _SC_SHRT_MAX: н32 = 113
+
+откр конст _SC_SHRT_MIN: н32 = 114
+
+откр конст _SC_SIGNALS: н32 = 158
+
+откр конст _SC_SIGQUEUE_MAX: н32 = 34
+
+откр конст _SC_SIGSTKSZ: н32 = 250
+
+откр конст _SC_SINGLE_PROCESS: н32 = 151
+
+откр конст _SC_SPAWN: н32 = 159
+
+откр конст _SC_SPIN_LOCKS: н32 = 154
+
+откр конст _SC_SPORADIC_SERVER: н32 = 160
+
+откр конст _SC_SSIZE_MAX: н32 = 110
+
+откр конст _SC_SS_REPL_MAX: н32 = 241
+
+откр конст _SC_STREAMS: н32 = 174
+
+откр конст _SC_STREAM_MAX: н32 = 5
+
+откр конст _SC_SYMLOOP_MAX: н32 = 173
+
+откр конст _SC_SYNCHRONIZED_IO: н32 = 14
+
+откр конст _SC_SYSTEM_DATABASE: н32 = 162
+
+откр конст _SC_SYSTEM_DATABASE_R: н32 = 163
+
+откр конст _SC_THREADS: н32 = 67
+
+откр конст _SC_THREAD_ATTR_STACKADDR: н32 = 77
+
+откр конст _SC_THREAD_ATTR_STACKSIZE: н32 = 78
+
+откр конст _SC_THREAD_CPUTIME: н32 = 139
+
+откр конст _SC_THREAD_DESTRUCTOR_ITERATIONS: н32 = 73
+
+откр конст _SC_THREAD_KEYS_MAX: н32 = 74
+
+откр конст _SC_THREAD_PRIORITY_SCHEDULING: н32 = 79
+
+откр конст _SC_THREAD_PRIO_INHERIT: н32 = 80
+
+откр конст _SC_THREAD_PRIO_PROTECT: н32 = 81
+
+откр конст _SC_THREAD_PROCESS_SHARED: н32 = 82
+
+откр конст _SC_THREAD_ROBUST_PRIO_INHERIT: н32 = 247
+
+откр конст _SC_THREAD_ROBUST_PRIO_PROTECT: н32 = 248
+
+откр конст _SC_THREAD_SAFE_FUNCTIONS: н32 = 68
+
+откр конст _SC_THREAD_SPORADIC_SERVER: н32 = 161
+
+откр конст _SC_THREAD_STACK_MIN: н32 = 75
+
+откр конст _SC_THREAD_THREADS_MAX: н32 = 76
+
+откр конст _SC_TIMEOUTS: н32 = 164
+
+откр конст _SC_TIMERS: н32 = 11
+
+откр конст _SC_TIMER_MAX: н32 = 35
+
+откр конст _SC_TRACE: н32 = 181
+
+откр конст _SC_TRACE_EVENT_FILTER: н32 = 182
+
+откр конст _SC_TRACE_EVENT_NAME_MAX: н32 = 242
+
+откр конст _SC_TRACE_INHERIT: н32 = 183
+
+откр конст _SC_TRACE_LOG: н32 = 184
+
+откр конст _SC_TRACE_NAME_MAX: н32 = 243
+
+откр конст _SC_TRACE_SYS_MAX: н32 = 244
+
+откр конст _SC_TRACE_USER_EVENT_MAX: н32 = 245
+
+откр конст _SC_TTY_NAME_MAX: н32 = 72
+
+откр конст _SC_TYPED_MEMORY_OBJECTS: н32 = 165
+
+откр конст _SC_TZNAME_MAX: н32 = 6
+
+откр конст _SC_T_IOV_MAX: н32 = 66
+
+откр конст _SC_UCHAR_MAX: н32 = 115
+
+откр конст _SC_UINT_MAX: н32 = 116
+
+откр конст _SC_UIO_MAXIOV: н32 = 60
+
+откр конст _SC_ULONG_MAX: н32 = 117
+
+откр конст _SC_USER_GROUPS: н32 = 166
+
+откр конст _SC_USER_GROUPS_R: н32 = 167
+
+откр конст _SC_USHRT_MAX: н32 = 118
+
+откр конст _SC_V6_ILP32_OFF32: н32 = 176
+
+откр конст _SC_V6_ILP32_OFFBIG: н32 = 177
+
+откр конст _SC_V6_LP64_OFF64: н32 = 178
+
+откр конст _SC_V6_LPBIG_OFFBIG: н32 = 179
+
+откр конст _SC_V7_ILP32_OFF32: н32 = 237
+
+откр конст _SC_V7_ILP32_OFFBIG: н32 = 238
+
+откр конст _SC_V7_LP64_OFF64: н32 = 239
+
+откр конст _SC_V7_LPBIG_OFFBIG: н32 = 240
+
+откр конст _SC_VERSION: н32 = 29
+
+откр конст _SC_WORD_BIT: н32 = 107
+
+откр конст _SC_XBS5_ILP32_OFF32: н32 = 125
+
+откр конст _SC_XBS5_ILP32_OFFBIG: н32 = 126
+
+откр конст _SC_XBS5_LP64_OFF64: н32 = 127
+
+откр конст _SC_XBS5_LPBIG_OFFBIG: н32 = 128
+
+откр конст _SC_XOPEN_CRYPT: н32 = 92
+
+откр конст _SC_XOPEN_ENH_I18N: н32 = 93
+
+откр конст _SC_XOPEN_LEGACY: н32 = 129
+
+откр конст _SC_XOPEN_REALTIME: н32 = 130
+
+откр конст _SC_XOPEN_REALTIME_THREADS: н32 = 131
+
+откр конст _SC_XOPEN_SHM: н32 = 94
+
+откр конст _SC_XOPEN_STREAMS: н32 = 246
+
+откр конст _SC_XOPEN_UNIX: н32 = 91
+
+откр конст _SC_XOPEN_VERSION: н32 = 89
+
+откр конст _SC_XOPEN_XCU_VERSION: н32 = 90
+
+откр конст _SC_XOPEN_XPG2: н32 = 98
+
+откр конст _SC_XOPEN_XPG3: н32 = 99
+
+откр конст _SC_XOPEN_XPG4: н32 = 100
+
+откр внеш "C" функ __getpgid(__pid: __pid_t) -> __pid_t
+
+откр внеш "C" функ _exit(__status: ц32)
+
+откр внеш "C" функ access(__name: ?*н8, __type: ц32) -> ц32
+
+откр внеш "C" функ adler32(adler: uLong, buf: ?*Bytef, len: uInt) -> uLong
+
+откр внеш "C" функ adler32_combine(п1: uLong, п2: uLong, п3: off_t) -> uLong
+
+откр внеш "C" функ adler32_z(adler: uLong, buf: ?*Bytef, len: z_size_t) -> uLong
+
+откр внеш "C" функ alarm(__seconds: н32) -> н32
+
+откр внеш "C" функ chdir(__path: ?*н8) -> ц32
+
+откр внеш "C" функ chown(__file: ?*н8, __owner: __uid_t, __group: __gid_t) -> ц32
+
+откр внеш "C" функ close(__fd: ц32) -> ц32
+
+откр внеш "C" функ compress(dest: ?*Bytef, destLen: ?*uLongf, source: ?*Bytef, sourceLen: uLong) -> ц32
+
+откр внеш "C" функ compress2(dest: ?*Bytef, destLen: ?*uLongf, source: ?*Bytef, sourceLen: uLong, level: ц32) -> ц32
+
+откр внеш "C" функ compressBound(sourceLen: uLong) -> uLong
+
+откр внеш "C" функ crc32(crc: uLong, buf: ?*Bytef, len: uInt) -> uLong
+
+откр внеш "C" функ crc32_combine(п1: uLong, п2: uLong, п3: off_t) -> uLong
+
+откр внеш "C" функ crc32_combine_gen(п1: off_t) -> uLong
+
+откр внеш "C" функ crc32_combine_op(crc1: uLong, crc2: uLong, op: uLong) -> uLong
+
+откр внеш "C" функ crc32_z(crc: uLong, buf: ?*Bytef, len: z_size_t) -> uLong
+
+откр внеш "C" функ deflate(strm: z_streamp, flush: ц32) -> ц32
+
+откр внеш "C" функ deflateBound(strm: z_streamp, sourceLen: uLong) -> uLong
+
+откр внеш "C" функ deflateCopy(dest: z_streamp, source: z_streamp) -> ц32
+
+откр внеш "C" функ deflateEnd(strm: z_streamp) -> ц32
+
+откр внеш "C" функ deflateGetDictionary(strm: z_streamp, dictionary: ?*Bytef, dictLength: ?*uInt) -> ц32
+
+откр внеш "C" функ deflateInit2_(strm: z_streamp, level: ц32, method: ц32, windowBits: ц32, memLevel: ц32, strategy: ц32, version: ?*н8, stream_size: ц32) -> ц32
+
+откр внеш "C" функ deflateInit_(strm: z_streamp, level: ц32, version: ?*н8, stream_size: ц32) -> ц32
+
+откр внеш "C" функ deflateParams(strm: z_streamp, level: ц32, strategy: ц32) -> ц32
+
+откр внеш "C" функ deflatePending(strm: z_streamp, pending: ?*н32, bits: ?*ц32) -> ц32
+
+откр внеш "C" функ deflatePrime(strm: z_streamp, bits: ц32, value: ц32) -> ц32
+
+откр внеш "C" функ deflateReset(strm: z_streamp) -> ц32
+
+откр внеш "C" функ deflateResetKeep(п1: z_streamp) -> ц32
+
+откр внеш "C" функ deflateSetDictionary(strm: z_streamp, dictionary: ?*Bytef, dictLength: uInt) -> ц32
+
+откр внеш "C" функ deflateSetHeader(strm: z_streamp, head: gz_headerp) -> ц32
+
+откр внеш "C" функ deflateTune(strm: z_streamp, good_length: ц32, max_lazy: ц32, nice_length: ц32, max_chain: ц32) -> ц32
+
+откр внеш "C" функ dup(__fd: ц32) -> ц32
+
+откр внеш "C" функ dup2(__fd: ц32, __fd2: ц32) -> ц32
+
+откр внеш "C" функ execl(__path: ?*н8, __arg: ?*н8, ...) -> ц32
+
+откр внеш "C" функ execle(__path: ?*н8, __arg: ?*н8, ...) -> ц32
+
+откр внеш "C" функ execlp(__file: ?*н8, __arg: ?*н8, ...) -> ц32
+
+откр внеш "C" функ execv(__path: ?*н8, __argv: ?*?*н8) -> ц32
+
+откр внеш "C" функ execve(__path: ?*н8, __argv: ?*?*н8, __envp: ?*?*н8) -> ц32
+
+откр внеш "C" функ execvp(__file: ?*н8, __argv: ?*?*н8) -> ц32
+
+откр внеш "C" функ fork() -> __pid_t
+
+откр внеш "C" функ fpathconf(__fd: ц32, __name: ц32) -> ц64
+
+откр внеш "C" функ fsync(__fd: ц32) -> ц32
+
+откр внеш "C" функ get_crc_table() -> ?*z_crc_t
+
+откр внеш "C" функ getcwd(__buf: ?*н8, __size: разм) -> ?*н8
+
+откр внеш "C" функ getegid() -> __gid_t
+
+откр внеш "C" функ geteuid() -> __uid_t
+
+откр внеш "C" функ getgid() -> __gid_t
+
+откр внеш "C" функ getgroups(__size: ц32, __list: ?*__gid_t) -> ц32
+
+откр внеш "C" функ getlogin() -> ?*н8
+
+откр внеш "C" функ getpgrp() -> __pid_t
+
+откр внеш "C" функ getpid() -> __pid_t
+
+откр внеш "C" функ getppid() -> __pid_t
+
+откр внеш "C" функ getuid() -> __uid_t
+
+откр внеш "C" функ gzbuffer(file: gzFile, size: н32) -> ц32
+
+откр внеш "C" функ gzclearerr(file: gzFile)
+
+откр внеш "C" функ gzclose(file: gzFile) -> ц32
+
+откр внеш "C" функ gzclose_r(file: gzFile) -> ц32
+
+откр внеш "C" функ gzclose_w(file: gzFile) -> ц32
+
+откр внеш "C" функ gzdirect(file: gzFile) -> ц32
+
+откр внеш "C" функ gzdopen(fd: ц32, mode: ?*н8) -> gzFile
+
+откр внеш "C" функ gzeof(file: gzFile) -> ц32
+
+откр внеш "C" функ gzerror(file: gzFile, errnum: ?*ц32) -> ?*н8
+
+откр внеш "C" функ gzflush(file: gzFile, flush: ц32) -> ц32
+
+откр внеш "C" функ gzfread(buf: voidp, size: z_size_t, nitems: z_size_t, file: gzFile) -> z_size_t
+
+откр внеш "C" функ gzfwrite(buf: voidpc, size: z_size_t, nitems: z_size_t, file: gzFile) -> z_size_t
+
+откр внеш "C" функ gzgetc(file: gzFile) -> ц32
+
+откр внеш "C" функ gzgetc_(file: gzFile) -> ц32
+
+откр внеш "C" функ gzgets(file: gzFile, buf: ?*н8, len: ц32) -> ?*н8
+
+откр внеш "C" функ gzoffset(п1: gzFile) -> off_t
+
+откр внеш "C" функ gzopen(п1: ?*н8, п2: ?*н8) -> gzFile
+
+откр внеш "C" функ gzprintf(file: gzFile, format: ?*н8, ...) -> ц32
+
+откр внеш "C" функ gzputc(file: gzFile, c: ц32) -> ц32
+
+откр внеш "C" функ gzputs(file: gzFile, s: ?*н8) -> ц32
+
+откр внеш "C" функ gzread(file: gzFile, buf: voidp, len: н32) -> ц32
+
+откр внеш "C" функ gzrewind(file: gzFile) -> ц32
+
+откр внеш "C" функ gzseek(п1: gzFile, п2: off_t, п3: ц32) -> off_t
+
+откр внеш "C" функ gzsetparams(file: gzFile, level: ц32, strategy: ц32) -> ц32
+
+откр внеш "C" функ gztell(п1: gzFile) -> off_t
+
+откр внеш "C" функ gzungetc(c: ц32, file: gzFile) -> ц32
+
+откр внеш "C" функ gzwrite(file: gzFile, buf: voidpc, len: н32) -> ц32
+
+откр внеш "C" функ inflate(strm: z_streamp, flush: ц32) -> ц32
+
+откр внеш "C" функ inflateBack(strm: z_streamp, in: in_func, in_desc: ?*пусто, out: out_func, out_desc: ?*пусто) -> ц32
+
+откр внеш "C" функ inflateBackEnd(strm: z_streamp) -> ц32
+
+откр внеш "C" функ inflateBackInit_(strm: z_streamp, windowBits: ц32, window: ?*н8, version: ?*н8, stream_size: ц32) -> ц32
+
+откр внеш "C" функ inflateCodesUsed(п1: z_streamp) -> н64
+
+откр внеш "C" функ inflateCopy(dest: z_streamp, source: z_streamp) -> ц32
+
+откр внеш "C" функ inflateEnd(strm: z_streamp) -> ц32
+
+откр внеш "C" функ inflateGetDictionary(strm: z_streamp, dictionary: ?*Bytef, dictLength: ?*uInt) -> ц32
+
+откр внеш "C" функ inflateGetHeader(strm: z_streamp, head: gz_headerp) -> ц32
+
+откр внеш "C" функ inflateInit2_(strm: z_streamp, windowBits: ц32, version: ?*н8, stream_size: ц32) -> ц32
+
+откр внеш "C" функ inflateInit_(strm: z_streamp, version: ?*н8, stream_size: ц32) -> ц32
+
+откр внеш "C" функ inflateMark(strm: z_streamp) -> ц64
+
+откр внеш "C" функ inflatePrime(strm: z_streamp, bits: ц32, value: ц32) -> ц32
+
+откр внеш "C" функ inflateReset(strm: z_streamp) -> ц32
+
+откр внеш "C" функ inflateReset2(strm: z_streamp, windowBits: ц32) -> ц32
+
+откр внеш "C" функ inflateResetKeep(п1: z_streamp) -> ц32
+
+откр внеш "C" функ inflateSetDictionary(strm: z_streamp, dictionary: ?*Bytef, dictLength: uInt) -> ц32
+
+откр внеш "C" функ inflateSync(strm: z_streamp) -> ц32
+
+откр внеш "C" функ inflateSyncPoint(п1: z_streamp) -> ц32
+
+откр внеш "C" функ inflateUndermine(п1: z_streamp, п2: ц32) -> ц32
+
+откр внеш "C" функ inflateValidate(п1: z_streamp, п2: ц32) -> ц32
+
+откр внеш "C" функ isatty(__fd: ц32) -> ц32
+
+откр внеш "C" функ link(__from: ?*н8, __to: ?*н8) -> ц32
+
+откр внеш "C" функ lseek(__fd: ц32, __offset: __off_t, __whence: ц32) -> __off_t
+
+откр внеш "C" функ pathconf(__path: ?*н8, __name: ц32) -> ц64
+
+откр внеш "C" функ pause() -> ц32
+
+откр внеш "C" функ pipe(__pipedes: ?*ц32) -> ц32
+
+откр внеш "C" функ read(__fd: ц32, __buf: ?*пусто, __nbytes: разм) -> смещ
+
+откр внеш "C" функ rmdir(__path: ?*н8) -> ц32
+
+откр внеш "C" функ setgid(__gid: __gid_t) -> ц32
+
+откр внеш "C" функ setpgid(__pid: __pid_t, __pgid: __pid_t) -> ц32
+
+откр внеш "C" функ setsid() -> __pid_t
+
+откр внеш "C" функ setuid(__uid: __uid_t) -> ц32
+
+откр внеш "C" функ sleep(__seconds: н32) -> н32
+
+откр внеш "C" функ sysconf(__name: ц32) -> ц64
+
+откр внеш "C" функ tcgetpgrp(__fd: ц32) -> __pid_t
+
+откр внеш "C" функ tcsetpgrp(__fd: ц32, __pgrp_id: __pid_t) -> ц32
+
+откр внеш "C" функ ttyname(__fd: ц32) -> ?*н8
+
+откр внеш "C" функ ttyname_r(__fd: ц32, __buf: ?*н8, __buflen: разм) -> ц32
+
+откр внеш "C" функ uncompress(dest: ?*Bytef, destLen: ?*uLongf, source: ?*Bytef, sourceLen: uLong) -> ц32
+
+откр внеш "C" функ uncompress2(dest: ?*Bytef, destLen: ?*uLongf, source: ?*Bytef, sourceLen: ?*uLong) -> ц32
+
+откр внеш "C" функ unlink(__name: ?*н8) -> ц32
+
+откр внеш "C" функ write(__fd: ц32, __buf: ?*пусто, __n: разм) -> смещ
+
+откр внеш "C" функ zError(п1: ц32) -> ?*н8
+
+откр внеш "C" функ zlibCompileFlags() -> uLong
+
+откр внеш "C" функ zlibVersion() -> ?*н8
+
+[ПеременнаяСи]
+откр конст __environ: ?*?*н8 = Ничего
+
+откр конст MAX_MEM_LEVEL: ц32 = 9
+
+откр конст MAX_WBITS: ц32 = 15
+
+откр конст _LIBC_LIMITS_H_: ц32 = 1
+
+откр конст _FEATURES_H: ц32 = 1
+
+откр конст __GLIBC_USE_ISOC2X: ц32 = 0
+
+откр конст __USE_ISOC11: ц32 = 1
+
+откр конст __USE_ISOC99: ц32 = 1
+
+откр конст __USE_ISOC95: ц32 = 1
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __TIMESIZE: ц32 = 64
+
+откр конст __USE_FORTIFY_LEVEL: ц32 = 0
+
+откр конст __GLIBC_USE_DEPRECATED_GETS: ц32 = 0
+
+откр конст __GLIBC_USE_DEPRECATED_SCANF: ц32 = 0
+
+откр конст __GLIBC_USE_C2X_STRTOL: ц32 = 0
+
+откр конст _STDC_PREDEF_H: ц32 = 1
+
+откр конст __STDC_IEC_559__: ц32 = 1
+
+откр конст __STDC_IEC_60559_BFP__: ц64 = 201404
+
+откр конст __STDC_IEC_559_COMPLEX__: ц32 = 1
+
+откр конст __STDC_IEC_60559_COMPLEX__: ц64 = 201404
+
+откр конст __STDC_ISO_10646__: ц64 = 201706
+
+откр конст __GNU_LIBRARY__: ц32 = 6
+
+откр конст __GLIBC__: ц32 = 2
+
+откр конст __GLIBC_MINOR__: ц32 = 39
+
+откр конст _SYS_CDEFS_H: ц32 = 1
+
+откр конст __glibc_c99_flexarr_available: ц32 = 1
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __LDOUBLE_REDIRECTS_TO_FLOAT128_ABI: ц32 = 0
+
+откр конст __HAVE_GENERIC_SELECTION: ц32 = 1
+
+откр конст __GLIBC_USE_LIB_EXT2: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_BFP_EXT: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_BFP_EXT_C2X: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_EXT: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_FUNCS_EXT: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_FUNCS_EXT_C2X: ц32 = 0
+
+откр конст __GLIBC_USE_IEC_60559_TYPES_EXT: ц32 = 0
+
+откр конст MB_LEN_MAX: ц32 = 16
+
+откр конст LLONG_MIN: ц64 = -9223372036854775808
+
+откр конст LLONG_MAX: ц64 = 9223372036854775807
+
+откр конст ULLONG_MAX: н64 = 18446744073709551615
+
+откр конст SCHAR_MAX: ц32 = 127
+
+откр конст SHRT_MAX: ц32 = 32767
+
+откр конст INT_MAX: ц32 = 2147483647
+
+откр конст LONG_MAX: ц64 = 9223372036854775807
+
+откр конст SCHAR_MIN: ц32 = -128
+
+откр конст SHRT_MIN: ц32 = -32768
+
+откр конст INT_MIN: ц32 = -2147483648
+
+откр конст LONG_MIN: ц64 = -9223372036854775808
+
+откр конст UCHAR_MAX: ц32 = 255
+
+откр конст USHRT_MAX: ц32 = 65535
+
+откр конст UINT_MAX: н32 = 4294967295
+
+откр конст ULONG_MAX: н64 = 18446744073709551615
+
+откр конст CHAR_BIT: ц32 = 8
+
+откр конст CHAR_MIN: ц32 = -128
+
+откр конст CHAR_MAX: ц32 = 127
+
+откр конст LLONG_MAX: ц64 = 9223372036854775807
+
+откр конст LLONG_MIN: ц64 = -9223372036854775808
+
+откр конст ULLONG_MAX: н64 = 18446744073709551615
+
+откр конст _SYS_TYPES_H: ц32 = 1
+
+откр конст _BITS_TYPES_H: ц32 = 1
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE: ц32 = 64
+
+откр конст __WORDSIZE_TIME64_COMPAT32: ц32 = 1
+
+откр конст __SYSCALL_WORDSIZE: ц32 = 64
+
+откр конст __TIMESIZE: ц32 = 64
+
+откр конст _BITS_TYPESIZES_H: ц32 = 1
+
+откр конст __OFF_T_MATCHES_OFF64_T: ц32 = 1
+
+откр конст __INO_T_MATCHES_INO64_T: ц32 = 1
+
+откр конст __RLIM_T_MATCHES_RLIM64_T: ц32 = 1
+
+откр конст __STATFS_MATCHES_STATFS64: ц32 = 1
+
+откр конст __KERNEL_OLD_TIMEVAL_MATCHES_TIMEVAL64: ц32 = 1
+
+откр конст __FD_SETSIZE: ц32 = 1024
+
+откр конст _BITS_TIME64_H: ц32 = 1
+
+откр конст __clockid_t_defined: ц32 = 1
+
+откр конст __time_t_defined: ц32 = 1
+
+откр конст __timer_t_defined: ц32 = 1
+
+откр конст _BITS_STDINT_INTN_H: ц32 = 1
+
+откр конст __BIT_TYPES_DEFINED__: ц32 = 1
+
+откр конст _UNISTD_H: ц32 = 1
+
+откр конст _POSIX_VERSION: ц64 = 199009
+
+откр конст __POSIX2_THIS_VERSION: ц64 = 199209
+
+откр конст _POSIX2_VERSION: ц64 = 199209
+
+откр конст _POSIX2_C_VERSION: ц64 = 199209
+
+откр конст _POSIX2_C_BIND: ц64 = 199209
+
+откр конст _POSIX2_C_DEV: ц64 = 199209
+
+откр конст _POSIX2_SW_DEV: ц64 = 199209
+
+откр конст _POSIX2_LOCALEDEF: ц64 = 199209
+
+откр конст _XOPEN_VERSION: ц32 = 4
+
+откр конст _XOPEN_XCU_VERSION: ц32 = 4
+
+откр конст _XOPEN_XPG2: ц32 = 1
+
+откр конст _XOPEN_XPG3: ц32 = 1
+
+откр конст _XOPEN_XPG4: ц32 = 1
+
+откр конст _XOPEN_UNIX: ц32 = 1
+
+откр конст _XOPEN_ENH_I18N: ц32 = 1
+
+откр конст _XOPEN_LEGACY: ц32 = 1
+
+откр конст _BITS_POSIX_OPT_H: ц32 = 1
+
+откр конст _POSIX_JOB_CONTROL: ц32 = 1
+
+откр конст _POSIX_SAVED_IDS: ц32 = 1
+
+откр конст _POSIX_PRIORITY_SCHEDULING: ц64 = 200809
+
+откр конст _POSIX_SYNCHRONIZED_IO: ц64 = 200809
+
+откр конст _POSIX_FSYNC: ц64 = 200809
+
+откр конст _POSIX_MAPPED_FILES: ц64 = 200809
+
+откр конст _POSIX_MEMLOCK: ц64 = 200809
+
+откр конст _POSIX_MEMLOCK_RANGE: ц64 = 200809
+
+откр конст _POSIX_MEMORY_PROTECTION: ц64 = 200809
+
+откр конст _POSIX_CHOWN_RESTRICTED: ц32 = 0
+
+откр конст _POSIX_VDISABLE: ц32 = 0
+
+откр конст _POSIX_NO_TRUNC: ц32 = 1
+
+откр конст _XOPEN_REALTIME: ц32 = 1
+
+откр конст _XOPEN_REALTIME_THREADS: ц32 = 1
+
+откр конст _XOPEN_SHM: ц32 = 1
+
+откр конст _POSIX_THREADS: ц64 = 200809
+
+откр конст _POSIX_REENTRANT_FUNCTIONS: ц32 = 1
+
+откр конст _POSIX_THREAD_SAFE_FUNCTIONS: ц64 = 200809
+
+откр конст _POSIX_THREAD_PRIORITY_SCHEDULING: ц64 = 200809
+
+откр конст _POSIX_THREAD_ATTR_STACKSIZE: ц64 = 200809
+
+откр конст _POSIX_THREAD_ATTR_STACKADDR: ц64 = 200809
+
+откр конст _POSIX_THREAD_PRIO_INHERIT: ц64 = 200809
+
+откр конст _POSIX_THREAD_PRIO_PROTECT: ц64 = 200809
+
+откр конст _POSIX_SEMAPHORES: ц64 = 200809
+
+откр конст _POSIX_REALTIME_SIGNALS: ц64 = 200809
+
+откр конст _POSIX_ASYNCHRONOUS_IO: ц64 = 200809
+
+откр конст _POSIX_ASYNC_IO: ц32 = 1
+
+откр конст _LFS_ASYNCHRONOUS_IO: ц32 = 1
+
+откр конст _POSIX_PRIORITIZED_IO: ц64 = 200809
+
+откр конст _LFS64_ASYNCHRONOUS_IO: ц32 = 1
+
+откр конст _LFS_LARGEFILE: ц32 = 1
+
+откр конст _LFS64_LARGEFILE: ц32 = 1
+
+откр конст _LFS64_STDIO: ц32 = 1
+
+откр конст _POSIX_SHARED_MEMORY_OBJECTS: ц64 = 200809
+
+откр конст _POSIX_CPUTIME: ц32 = 0
+
+откр конст _POSIX_THREAD_CPUTIME: ц32 = 0
+
+откр конст _POSIX_REGEXP: ц32 = 1
+
+откр конст _POSIX_READER_WRITER_LOCKS: ц64 = 200809
+
+откр конст _POSIX_SHELL: ц32 = 1
+
+откр конст _POSIX_TIMEOUTS: ц64 = 200809
+
+откр конст _POSIX_SPIN_LOCKS: ц64 = 200809
+
+откр конст _POSIX_SPAWN: ц64 = 200809
+
+откр конст _POSIX_TIMERS: ц64 = 200809
+
+откр конст _POSIX_BARRIERS: ц64 = 200809
+
+откр конст _POSIX_MESSAGE_PASSING: ц64 = 200809
+
+откр конст _POSIX_THREAD_PROCESS_SHARED: ц64 = 200809
+
+откр конст _POSIX_MONOTONIC_CLOCK: ц32 = 0
+
+откр конст _POSIX_CLOCK_SELECTION: ц64 = 200809
+
+откр конст _POSIX_ADVISORY_INFO: ц64 = 200809
+
+откр конст _POSIX_IPV6: ц64 = 200809
+
+откр конст _POSIX_RAW_SOCKETS: ц64 = 200809
+
+откр конст _POSIX2_CHAR_TERM: ц64 = 200809
+
+откр конст _POSIX_SPORADIC_SERVER: ц32 = -1
+
+откр конст _POSIX_THREAD_SPORADIC_SERVER: ц32 = -1
+
+откр конст _POSIX_TRACE: ц32 = -1
+
+откр конст _POSIX_TRACE_EVENT_FILTER: ц32 = -1
+
+откр конст _POSIX_TRACE_INHERIT: ц32 = -1
+
+откр конст _POSIX_TRACE_LOG: ц32 = -1
+
+откр конст _POSIX_TYPED_MEMORY_OBJECTS: ц32 = -1
+
+откр конст STDIN_FILENO: ц32 = 0
+
+откр конст STDOUT_FILENO: ц32 = 1
+
+откр конст STDERR_FILENO: ц32 = 2
+
+откр конст R_OK: ц32 = 4
+
+откр конст W_OK: ц32 = 2
+
+откр конст X_OK: ц32 = 1
+
+откр конст F_OK: ц32 = 0
+
+откр конст SEEK_SET: ц32 = 0
+
+откр конст SEEK_CUR: ц32 = 1
+
+откр конст SEEK_END: ц32 = 2
+
+откр конст _SC_PAGE_SIZE: ц32 = 30
+
+откр конст _CS_POSIX_V6_WIDTH_RESTRICTED_ENVS: ц32 = 1
+
+откр конст _CS_POSIX_V5_WIDTH_RESTRICTED_ENVS: ц32 = 4
+
+откр конст _CS_POSIX_V7_WIDTH_RESTRICTED_ENVS: ц32 = 5
+
+откр конст ZLIB_VERSION: [:0]н8 = "1.3"
+
+откр конст ZLIB_VERNUM: ц32 = 4864
+
+откр конст ZLIB_VER_MAJOR: ц32 = 1
+
+откр конст ZLIB_VER_MINOR: ц32 = 3
+
+откр конст ZLIB_VER_REVISION: ц32 = 0
+
+откр конст ZLIB_VER_SUBREVISION: ц32 = 0
+
+откр конст Z_NO_FLUSH: ц32 = 0
+
+откр конст Z_PARTIAL_FLUSH: ц32 = 1
+
+откр конст Z_SYNC_FLUSH: ц32 = 2
+
+откр конст Z_FULL_FLUSH: ц32 = 3
+
+откр конст Z_FINISH: ц32 = 4
+
+откр конст Z_BLOCK: ц32 = 5
+
+откр конст Z_TREES: ц32 = 6
+
+откр конст Z_OK: ц32 = 0
+
+откр конст Z_STREAM_END: ц32 = 1
+
+откр конст Z_NEED_DICT: ц32 = 2
+
+откр конст Z_ERRNO: ц32 = -1
+
+откр конст Z_STREAM_ERROR: ц32 = -2
+
+откр конст Z_DATA_ERROR: ц32 = -3
+
+откр конст Z_MEM_ERROR: ц32 = -4
+
+откр конст Z_BUF_ERROR: ц32 = -5
+
+откр конст Z_VERSION_ERROR: ц32 = -6
+
+откр конст Z_NO_COMPRESSION: ц32 = 0
+
+откр конст Z_BEST_SPEED: ц32 = 1
+
+откр конст Z_BEST_COMPRESSION: ц32 = 9
+
+откр конст Z_DEFAULT_COMPRESSION: ц32 = -1
+
+откр конст Z_FILTERED: ц32 = 1
+
+откр конст Z_HUFFMAN_ONLY: ц32 = 2
+
+откр конст Z_RLE: ц32 = 3
+
+откр конст Z_FIXED: ц32 = 4
+
+откр конст Z_DEFAULT_STRATEGY: ц32 = 0
+
+откр конст Z_BINARY: ц32 = 0
+
+откр конст Z_TEXT: ц32 = 1
+
+откр конст Z_ASCII: ц32 = 1
+
+откр конст Z_UNKNOWN: ц32 = 2
+
+откр конст Z_DEFLATED: ц32 = 8
+
+откр конст Z_NULL: ц32 = 0
+
+[Встроено]
+откр функ deflateInit(strm: z_streamp, level: ц32) -> ц32
+
+[Встроено]
+откр функ inflateInit(strm: z_streamp) -> ц32
+
+[Встроено]
+откр функ deflateInit2(strm: z_streamp, level: ц32, method: ц32, windowBits: ц32, memLevel: ц32, strategy: ц32) -> ц32
+
+[Встроено]
+откр функ inflateInit2(strm: z_streamp, windowBits: ц32) -> ц32
+
+[Встроено]
+откр функ inflateBackInit(strm: z_streamp, windowBits: ц32, window: ?*н8) -> ц32
