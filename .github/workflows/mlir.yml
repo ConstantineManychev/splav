@@ -1,0 +1,72 @@
+name: mlir
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "компилятор/dialect/**"
+      - "cmake/**"
+      - ".github/workflows/mlir.yml"
+  pull_request:
+    paths:
+      - "компилятор/dialect/**"
+      - "cmake/**"
+      - ".github/workflows/mlir.yml"
+  schedule:
+    - cron: "17 3 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: mlir-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUTF8: "1"
+
+jobs:
+  dialect:
+    name: dialect (LLVM/MLIR из cmake/llvm.cmake)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - name: Закреплённая версия и контрольная сумма
+        id: pin
+        run: |
+          version=$(sed -n 's/^set(SPLAV_LLVM_VERSION "\(.*\)")$/\1/p' cmake/llvm.cmake)
+          sha256=$(sed -n 's/^set(SPLAV_LLVM_ARCHIVE_LINUX_X64_SHA256 "\(.*\)")$/\1/p' cmake/llvm.cmake)
+          test -n "$version" && test -n "$sha256"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha256=$sha256" >> "$GITHUB_OUTPUT"
+      - name: Архив LLVM из кэша
+        id: cache
+        uses: actions/cache@v6
+        with:
+          path: llvm-archive
+          key: llvm-${{ steps.pin.outputs.version }}-linux-x64-${{ steps.pin.outputs.sha256 }}
+      - name: Загрузка архива LLVM
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p llvm-archive
+          curl -fL --retry 4 --retry-delay 5 -o llvm-archive/llvm.tar.xz \
+            "https://github.com/llvm/llvm-project/releases/download/llvmorg-${{ steps.pin.outputs.version }}/LLVM-${{ steps.pin.outputs.version }}-Linux-X64.tar.xz"
+      - name: Проверка sha256 и распаковка
+        run: |
+          echo "${{ steps.pin.outputs.sha256 }}  llvm-archive/llvm.tar.xz" | sha256sum --check
+          sudo mkdir -p /mnt/llvm
+          sudo chown "$USER" /mnt/llvm
+          tar -xf llvm-archive/llvm.tar.xz -C /mnt/llvm --strip-components=1
+          echo "SPLAV_LLVM_ROOT=/mnt/llvm" >> "$GITHUB_ENV"
+          df -h / /mnt
+      - name: Зависимости сборки
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ninja-build libzstd-dev zlib1g-dev
+      - name: Настройка
+        run: cmake --preset mlir
+      - name: Сборка
+        run: cmake --build --preset mlir
+      - name: Тесты
+        run: ctest --preset mlir

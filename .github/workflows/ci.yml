@@ -1,0 +1,132 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  PYTHONUTF8: "1"
+
+jobs:
+  checks:
+    name: checks (${{ matrix.os }})
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04, windows-2025, macos-26]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: libclang и zlib, откат на снимки запрещён
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libclang1-18 zlib1g-dev
+          echo "SPLAV_NO_SNAPSHOTS=1" >> "$GITHUB_ENV"
+      - name: Грамматика
+        run: python грамматика/проверка.py
+      - name: Злые примеры
+        run: python грамматика/проверка_злых.py
+      - name: Сочетания злых примеров
+        run: python модель/проверка_сочетаний.py
+      - name: Корпус и мутанты
+        run: python модель/проверка_корпуса.py
+
+  build:
+    name: build (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: linux-gcc
+            os: ubuntu-24.04
+            cxx: g++-13
+          - name: linux-clang
+            os: ubuntu-24.04
+            cxx: clang++-18
+          - name: windows-msvc
+            os: windows-2025
+            cxx: cl
+          - name: windows-clang
+            os: windows-2025
+            cxx: clang++
+          - name: macos-clang
+            os: macos-26
+            cxx: clang++
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Ninja
+        run: python -m pip install ninja==1.13.0
+      - name: Окружение MSVC
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $root = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.VC.Tools.x86.x64 -property installationPath
+          cmd /c "`"$root\VC\Auxiliary\Build\vcvars64.bat`" > nul && set" | ForEach-Object {
+            if ($_ -match '^([^=]+)=(.*)$') {
+              "$($matches[1])=$($matches[2])" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            }
+          }
+      - name: Настройка в каталоге с кириллическим именем
+        run: cmake -S . -B сборка/ci -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=${{ matrix.cxx }} -DSPLAV_WERROR=ON
+      - name: Сборка
+        run: cmake --build сборка/ci
+      - name: Повторная сборка ничего не делает
+        shell: bash
+        run: |
+          cmake --build сборка/ci 2>&1 | tee повтор.txt
+          grep -q "ninja: no work to do" повтор.txt
+      - name: Тесты
+        run: ctest --test-dir сборка/ci --output-on-failure
+
+  sanitize:
+    name: sanitize (ASan, UBSan)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Ninja и рантайм санитайзеров
+        run: |
+          python -m pip install ninja==1.13.0
+          sudo apt-get update
+          sudo apt-get install -y libclang-rt-18-dev
+      - name: Настройка
+        run: cmake --preset sanitize -DCMAKE_CXX_COMPILER=clang++-18
+      - name: Сборка
+        run: cmake --build --preset sanitize
+      - name: Тесты C++
+        run: ctest --preset sanitize -LE python
+
+  style:
+    name: style (clang-format)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: clang-format той же версии, что закреплённый LLVM
+        run: |
+          version=$(sed -n 's/^set(SPLAV_LLVM_VERSION "\(.*\)")$/\1/p' cmake/llvm.cmake)
+          python -m pip install "clang-format==$version"
+          clang-format --version
+      - name: Формат C++
+        run: git ls-files -z 'компилятор/*.cpp' 'компилятор/*.hpp' | xargs -0 clang-format --dry-run -Werror --style=file

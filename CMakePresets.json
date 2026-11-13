@@ -1,0 +1,119 @@
+{
+    "version": 6,
+    "cmakeMinimumRequired": {
+        "major": 3,
+        "minor": 25,
+        "patch": 0
+    },
+    "configurePresets": [
+        {
+            "name": "base",
+            "hidden": true,
+            "generator": "Ninja",
+            "binaryDir": "${sourceDir}/сборка/${presetName}",
+            "cacheVariables": {
+                "SPLAV_WERROR": "ON"
+            }
+        },
+        {
+            "name": "dev",
+            "displayName": "Отладочная сборка",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Debug"
+            }
+        },
+        {
+            "name": "release",
+            "displayName": "Сборка выпуска",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release"
+            }
+        },
+        {
+            "name": "sanitize",
+            "displayName": "ASan и UBSan, Clang",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "SPLAV_SANITIZE": "ON"
+            }
+        },
+        {
+            "name": "fuzz",
+            "displayName": "Цели libFuzzer, Clang",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "RelWithDebInfo",
+                "CMAKE_CXX_COMPILER": "clang++",
+                "SPLAV_FUZZ": "ON"
+            }
+        },
+        {
+            "name": "mlir",
+            "displayName": "Диалект splav на закреплённом LLVM/MLIR",
+            "inherits": "base",
+            "cacheVariables": {
+                "CMAKE_BUILD_TYPE": "Release",
+                "SPLAV_WERROR": "OFF",
+                "SPLAV_ENABLE_MLIR": "ON",
+                "MLIR_DIR": "$env{SPLAV_LLVM_ROOT}/lib/cmake/mlir",
+                "LLVM_DIR": "$env{SPLAV_LLVM_ROOT}/lib/cmake/llvm"
+            }
+        }
+    ],
+    "buildPresets": [
+        {
+            "name": "dev",
+            "configurePreset": "dev"
+        },
+        {
+            "name": "release",
+            "configurePreset": "release"
+        },
+        {
+            "name": "sanitize",
+            "configurePreset": "sanitize"
+        },
+        {
+            "name": "fuzz",
+            "configurePreset": "fuzz"
+        },
+        {
+            "name": "mlir",
+            "configurePreset": "mlir"
+        }
+    ],
+    "testPresets": [
+        {
+            "name": "dev",
+            "configurePreset": "dev",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "release",
+            "configurePreset": "release",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "sanitize",
+            "configurePreset": "sanitize",
+            "output": {
+                "outputOnFailure": true
+            }
+        },
+        {
+            "name": "mlir",
+            "configurePreset": "mlir",
+            "output": {
+                "outputOnFailure": true
+            }
+        }
+    ]
+}
