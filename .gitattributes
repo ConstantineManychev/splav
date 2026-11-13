@@ -6,3 +6,6 @@
 *.mlir text eol=lf
 *.png binary
 *.spv binary
+компилятор/unicode/tables.inc linguist-generated
+компилятор/tests/unicode_vectors.inc linguist-generated
+грамматика/юникод.py linguist-generated

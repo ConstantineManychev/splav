@@ -54,6 +54,16 @@ void Context::fail(std::string message, std::source_location location)
     recorded.push_back(Failure{std::move(message), location.file_name(), location.line()});
 }
 
+void Context::skip(std::string reason)
+{
+    skipped = std::move(reason);
+}
+
+const std::string& Context::skipReason() const
+{
+    return skipped;
+}
+
 void Context::expect(bool condition, std::string_view what, std::source_location location)
 {
     if (!condition)
@@ -81,9 +91,10 @@ int runAll(const std::filesystem::path& repositoryRoot, const std::vector<std::s
         ++total;
         Context context(repositoryRoot);
         testCase.body(context);
-        std::string report = context.failures().empty() ? "✓ " : "✗ ";
+        const bool skipped = context.failures().empty() && !context.skipReason().empty();
+        std::string report = !context.failures().empty() ? "✗ " : skipped ? "– " : "✓ ";
         report += testCase.name;
-        report += "\n";
+        report += skipped ? ": пропущено, " + context.skipReason() + "\n" : "\n";
         for (const Failure& failure : context.failures())
         {
             report += "    " + failure.file + ":" + std::to_string(failure.line) + ": " + failure.message + "\n";

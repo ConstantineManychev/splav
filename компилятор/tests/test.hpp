@@ -26,6 +26,8 @@ public:
     const std::vector<Failure>& failures() const;
 
     void fail(std::string message, std::source_location location = std::source_location::current());
+    void skip(std::string reason);
+    const std::string& skipReason() const;
 
     void expect(bool condition, std::string_view what, std::source_location location = std::source_location::current());
 
@@ -45,6 +47,7 @@ public:
 private:
     std::filesystem::path repositoryRoot;
     std::vector<Failure> recorded;
+    std::string skipped;
 };
 
 using Body = void (*)(Context&);

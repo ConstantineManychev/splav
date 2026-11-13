@@ -2,8 +2,9 @@ splav_add_executable(splav_tests
     main.cpp
     support_tests.cpp
     test.cpp
+    unicode_tests.cpp
 )
-target_link_libraries(splav_tests PRIVATE splav_support)
+target_link_libraries(splav_tests PRIVATE splav_support splav_unicode)
 
 add_test(NAME юнит COMMAND splav_tests "--корень=${PROJECT_SOURCE_DIR}")
 

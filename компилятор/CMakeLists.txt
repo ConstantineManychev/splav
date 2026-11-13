@@ -1,4 +1,5 @@
 add_subdirectory(support)
+add_subdirectory(unicode)
 add_subdirectory(driver)
 
 if(SPLAV_BUILD_TESTS)
