@@ -115,6 +115,35 @@ jobs:
       - name: Тесты C++
         run: ctest --preset sanitize -LE python
 
+  fuzz:
+    name: fuzz (libFuzzer)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+      - name: Ninja и рантайм санитайзеров
+        run: |
+          python -m pip install ninja==1.13.0
+          sudo apt-get update
+          sudo apt-get install -y libclang-rt-18-dev
+      - name: Настройка
+        run: cmake --preset fuzz -DCMAKE_CXX_COMPILER=clang++-18
+      - name: Сборка
+        run: cmake --build --preset fuzz --target splav_fuzz_syntax
+      - name: Затравки из корпуса
+        run: |
+          mkdir -p сборка/затравки
+          number=0
+          find корпус библиотека модель/заголовки -name '*.спл' | sort | while read -r file
+          do
+            number=$((number + 1))
+            cp "$file" "сборка/затравки/$number.спл"
+          done
+      - name: Лексер и парсер не падают, дерево печатается байт в байт
+        run: сборка/fuzz/bin/splav_fuzz_syntax -max_total_time=120 -max_len=16384 -timeout=10 сборка/затравки
+
   style:
     name: style (clang-format)
     runs-on: ubuntu-24.04
