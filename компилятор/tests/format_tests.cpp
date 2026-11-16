@@ -128,7 +128,7 @@ std::string withCollapsedWhitespace(std::string_view source)
 SPLAV_TEST(keepsCorpusCanonical, "формат: рукописный корпус канонический, повторный формат ничего не меняет")
 {
     size_t generatedChanged = 0;
-    for (const test::CorpusFile& file : test::corpusFiles(context.root()))
+    for (const test::CorpusFile& file : test::wellFormedCorpusFiles(context.root()))
     {
         const std::string once = formatted(file.source, file.mode);
         const std::string twice = formatted(once, file.mode);
@@ -154,7 +154,7 @@ SPLAV_TEST(keepsCorpusCanonical, "формат: рукописный корпу�
 
 SPLAV_TEST(ignoresSourceSpacing, "формат: результат не зависит от пробелов и отступов исходника")
 {
-    for (const test::CorpusFile& file : test::corpusFiles(context.root()))
+    for (const test::CorpusFile& file : test::wellFormedCorpusFiles(context.root()))
     {
         const std::string squeezed = withCollapsedWhitespace(file.source);
         if (formatted(squeezed, file.mode) != formatted(file.source, file.mode))
@@ -170,7 +170,7 @@ SPLAV_TEST(survivesInsertedTrivia, "формат: устойчив к комме
     constexpr size_t MAX_REPORTED = 5;
     size_t failures = 0;
     size_t variants = 0;
-    for (const test::CorpusFile& file : test::corpusFiles(context.root()))
+    for (const test::CorpusFile& file : test::wellFormedCorpusFiles(context.root()))
     {
         if (isGenerated(file.name))
         {
@@ -247,6 +247,13 @@ SPLAV_TEST(breaksLongLists, "формат: не поместившиеся ар�
     const std::string hugged = "функ ф()\n{\n    совпало = попытка ожидать(вместе.первый(\n        функ() => а(),\n"
                                "        функ() => б(),\n    ))\n}\n";
     context.expectEqual(formatted(hugged), hugged, "вложенный вызов без лишнего отступа");
+    const std::string grouped =
+        "функ ф()\n{\n    результат = (первоеДлинноеСлагаемое + второеДлинноеСлагаемое + третьеДлинноеСлагаемое + "
+        "четвёртоеДлинноеСлагаемое)\n    если событие это (ПервыйОченьДлинныйВариантСобытия или "
+        "ВторойОченьДлинныйВариантСобытия или ТретийОченьДлинныйВариант)\n    {\n    }\n}\n";
+    context.expectEqual(formatted(grouped), grouped, "скобки группировки не становятся кортежем");
+    context.expectEqual(formatted("конст ПАРА = (1,)\nконст ГРУППА = (1)\n"),
+        std::string("конст ПАРА = (1,)\nконст ГРУППА = (1)\n"), "кортеж из одного элемента хранит запятую");
     const std::string signature = "функ оченьДлинноеИмяФункции(первыйПараметр: ц32, второйПараметр: ц32, "
                                   "третийПараметр: ц32) -> Итог(ц32, Ошибка)\n";
     context.expectEqual(formatted(signature),

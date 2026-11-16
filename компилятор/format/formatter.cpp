@@ -643,10 +643,18 @@ private:
         case ParamList:
         case ArgList:
         case TupleExpr:
-        case TuplePattern:
         case PatternArgList:
-        case ParenExpr:
             formatBracketNode(node);
+            break;
+        case TuplePattern:
+            if (isGrouping(node))
+            {
+                formatTight(node);
+            }
+            else
+            {
+                formatBracketNode(node);
+            }
             break;
         case PatternFieldList:
             formatBraceNode(node);
@@ -951,6 +959,12 @@ private:
             out->space();
         }
         token(cursor);
+    }
+
+    static bool isGrouping(const GreenNode& node)
+    {
+        return std::none_of(node.children().begin(), node.children().end(),
+            [](const GreenElement& child) { return child.kind() == Comma; });
     }
 
     static bool hasSingleElementWithComma(const GreenNode& node)

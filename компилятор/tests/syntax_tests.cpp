@@ -12,7 +12,8 @@ namespace
 
 using namespace splav;
 
-constexpr size_t EXPECTED_CORPUS_FILES = 582;
+constexpr size_t EXPECTED_CORPUS_FILES = 680;
+constexpr size_t EXPECTED_REJECTED_FILES = 23;
 
 std::string firstDiagnostic(
     std::string_view source, ParseMode mode = ParseMode::Module, Language language = Language::Russian)
@@ -27,19 +28,29 @@ SPLAV_TEST(parsesCorpusLosslessly, "синтаксис: корпус разби�
 {
     const std::vector<test::CorpusFile> files = test::corpusFiles(context.root());
     context.expectEqual(files.size(), EXPECTED_CORPUS_FILES, "число файлов корпуса");
+    size_t rejected = 0;
     for (const test::CorpusFile& file : files)
     {
         const Parse parsed = parse(file.source, file.mode);
-        if (!parsed.diagnostics.empty())
+        const std::string reported = parsed.diagnostics.empty()
+            ? std::string()
+            : renderDiagnostic(parsed.diagnostics.front(), file.source, Language::Russian);
+        if (file.expectedDiagnostic)
         {
-            context.fail(
-                file.name + ": " + renderDiagnostic(parsed.diagnostics.front(), file.source, Language::Russian));
+            ++rejected;
+            context.expectEqual(parsed.diagnostics.size(), size_t{1}, file.name + ": число диагностик");
+            context.expectEqual(reported, *file.expectedDiagnostic, file.name + ": диагностика из файла .диаг");
+        }
+        else if (!parsed.diagnostics.empty())
+        {
+            context.fail(file.name + ": " + reported);
         }
         if (parsed.root->text() != file.source)
         {
             context.fail(file.name + ": дерево печатается не байт в байт");
         }
     }
+    context.expectEqual(rejected, EXPECTED_REJECTED_FILES, "число злых примеров синтаксиса");
 }
 
 SPLAV_TEST(keepsEveryByteOfBrokenInput, "синтаксис: дерево хранит каждый байт и при ошибках")
