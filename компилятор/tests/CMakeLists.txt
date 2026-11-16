@@ -1,12 +1,13 @@
 splav_add_executable(splav_tests
     corpus.cpp
+    format_tests.cpp
     main.cpp
     support_tests.cpp
     syntax_tests.cpp
     test.cpp
     unicode_tests.cpp
 )
-target_link_libraries(splav_tests PRIVATE splav_support splav_unicode splav_syntax)
+target_link_libraries(splav_tests PRIVATE splav_support splav_unicode splav_syntax splav_format)
 
 add_test(NAME юнит COMMAND splav_tests "--корень=${PROJECT_SOURCE_DIR}")
 

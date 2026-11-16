@@ -1,5 +1,6 @@
 #include "driver/driver.hpp"
 
+#include "format/formatter.hpp"
 #include "support/file_io.hpp"
 #include "support/utf8_path.hpp"
 #include "syntax/parser.hpp"
@@ -30,6 +31,7 @@ struct Options
     Language language = Language::Russian;
     std::optional<ParseMode> mode;
     std::vector<std::string> paths;
+    bool check = false;
     bool valid = true;
 };
 
@@ -75,6 +77,10 @@ Options parseOptions(Arguments arguments)
             {
                 options.valid = false;
             }
+        }
+        else if (view == "--проверить" || view == "--check")
+        {
+            options.check = true;
         }
         else if (view.starts_with("--"))
         {
@@ -167,7 +173,54 @@ int checkFiles(Arguments arguments)
     return clean ? 0 : 1;
 }
 
+int formatFiles(Arguments arguments)
+{
+    const Options options = parseOptions(arguments);
+    if (!options.valid || options.paths.empty())
+    {
+        writeStandardError(
+            "использование: сплав формат [--проверить] [--режим=модуль|фрагмент|манифест] <файлы или ->\n");
+        return 2;
+    }
+    bool clean = true;
+    for (const std::string& path : options.paths)
+    {
+        const std::optional<std::string> source = readSource(path);
+        if (!source)
+        {
+            writeStandardError("сплав: не читается файл «" + path + "»\n");
+            return 2;
+        }
+        const Parse parsed = parse(*source, modeFor(options, path));
+        if (!reportDiagnostics(parsed, *source, path, options.language))
+        {
+            clean = false;
+            continue;
+        }
+        const std::string formatted = format(*parsed.root);
+        if (options.check)
+        {
+            if (formatted != *source)
+            {
+                writeStandardError(path + ": формат отличается от канонического\n");
+                clean = false;
+            }
+        }
+        else if (path == STANDARD_INPUT)
+        {
+            writeStandardOutput(formatted);
+        }
+        else if (formatted != *source && !writeFile(pathFromUtf8(path), formatted))
+        {
+            writeStandardError("сплав: не записывается файл «" + path + "»\n");
+            return 2;
+        }
+    }
+    return clean ? 0 : 1;
+}
+
 constexpr std::array COMMANDS = {
+    Command{"формат", "fmt", "привести файлы к каноническому виду", formatFiles},
     Command{"проверить", "check", "проверить синтаксис файлов", checkFiles},
     Command{"дерево", "tree", "отладочная печать синтаксического дерева", printTree},
     Command{"версия", "version", "напечатать версию компилятора", printVersion},

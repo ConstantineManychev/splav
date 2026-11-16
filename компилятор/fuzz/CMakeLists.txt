@@ -1,3 +1,3 @@
 add_executable(splav_fuzz_syntax fuzz_syntax.cpp)
-target_link_libraries(splav_fuzz_syntax PRIVATE splav_syntax)
+target_link_libraries(splav_fuzz_syntax PRIVATE splav_syntax splav_format)
 target_link_options(splav_fuzz_syntax PRIVATE -fsanitize=fuzzer)
