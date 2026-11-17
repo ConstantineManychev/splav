@@ -8,6 +8,7 @@
 #include <deque>
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>
@@ -101,6 +102,7 @@ class Machine
 {
 public:
     Machine(Program& owner, Module& main, const RunOptions& chosen);
+    Machine(Program& owner, Module& main, Declarations& shared, const RunOptions& chosen);
     ~Machine();
     Machine(const Machine&) = delete;
     Machine& operator=(const Machine&) = delete;
@@ -120,11 +122,13 @@ public:
     Cell success(Cell payload) const;
     Cell failure(Cell error) const;
     const TypeDecl* findType(std::string_view module, std::string_view key) const;
+    const std::vector<Local>* typeArgumentsOf(const TypeDecl* decl) const;
 
     Program& program;
     Module& entryModule;
     RunOptions options;
-    Declarations declarations;
+    std::unique_ptr<Declarations> ownedDeclarations;
+    Declarations& declarations;
     const TypeDecl* resultType = nullptr;
     const TypeDecl* arrayType = nullptr;
     const TypeDecl* rangeType = nullptr;
@@ -142,6 +146,7 @@ public:
     int32_t nextDescriptor = 3;
 
 private:
+    void initialize();
     Frame& frame();
     const std::string& keyOf(const SyntaxToken& token);
     std::string locationOf(const Module* module, uint32_t offset) const;

@@ -1,5 +1,6 @@
 add_library(splav_interp STATIC
     builtins.cpp
+    comptime.cpp
     machine.cpp
     value.cpp
 )

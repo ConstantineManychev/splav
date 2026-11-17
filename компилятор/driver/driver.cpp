@@ -1,6 +1,7 @@
 #include "driver/driver.hpp"
 
 #include "format/formatter.hpp"
+#include "interp/comptime.hpp"
 #include "interp/interpreter.hpp"
 #include "sema/checker.hpp"
 #include "sema/names.hpp"
@@ -148,7 +149,7 @@ bool reportNames(const Options& options, const std::string& path)
     std::vector<Report> reports = resolveNames(program, *module, options.language);
     if (reports.empty())
     {
-        reports = checkTypes(program, *module, options.language);
+        reports = checkTypes(program, *module, options.language, makeComptimeEvaluator);
     }
     for (const Report& report : reports)
     {
@@ -319,7 +320,7 @@ bool readyToRun(Program& program, const Options& options, Module& module, const 
     std::vector<Report> reports = resolveNames(program, module, options.language);
     if (reports.empty())
     {
-        reports = checkTypes(program, module, options.language);
+        reports = checkTypes(program, module, options.language, makeComptimeEvaluator);
     }
     for (const Report& report : reports)
     {

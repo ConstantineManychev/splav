@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sema/comptime.hpp"
 #include "sema/program.hpp"
 #include "sema/report.hpp"
 
@@ -8,6 +9,7 @@
 namespace splav
 {
 
-std::vector<Report> checkTypes(Program& program, Module& module, Language language);
+std::vector<Report> checkTypes(
+    Program& program, Module& module, Language language, const EvaluatorFactory& evaluators = {});
 
 }

@@ -1,3 +1,4 @@
+#include "interp/comptime.hpp"
 #include "sema/checker.hpp"
 #include "sema/names.hpp"
 #include "sema/program.hpp"
@@ -23,7 +24,7 @@ constexpr std::string_view C_HEADER_IMAGES = "модель/заголовки";
 constexpr std::string_view FIXED_TWIN_SUFFIX = ".верно.спл";
 constexpr std::string_view DIAGNOSTICS_EXTENSION = ".диаг";
 constexpr size_t EXPECTED_NAME_EXAMPLES = 11;
-constexpr size_t EXPECTED_TYPE_EXAMPLES = 16;
+constexpr size_t EXPECTED_TYPE_EXAMPLES = 17;
 const std::set<std::string> CHECKED_BY_MODEL = {"01-неполныйВыбор.спл", "02-недостижимаяВетвь.спл"};
 
 std::string resolved(const std::filesystem::path& root, const std::filesystem::path& file)
@@ -37,7 +38,7 @@ std::string resolved(const std::filesystem::path& root, const std::filesystem::p
     std::vector<Report> reports = resolveNames(program, *module, Language::Russian);
     if (reports.empty())
     {
-        reports = checkTypes(program, *module, Language::Russian);
+        reports = checkTypes(program, *module, Language::Russian, makeComptimeEvaluator);
     }
     std::string text;
     for (const Report& report : reports)

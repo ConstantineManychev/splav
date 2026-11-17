@@ -9,6 +9,7 @@
 #include <algorithm>
 #include <deque>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>
@@ -58,8 +59,16 @@ class Checker
 {
 public:
     Checker(Program& owner, SourceModule& checked, Language chosen)
-        : module(checked), language(chosen), declarations(owner, checked)
+        : program(owner), module(checked), language(chosen), declarations(owner, checked)
     {
+    }
+
+    void attach(const EvaluatorFactory& evaluators)
+    {
+        if (evaluators)
+        {
+            evaluator = evaluators(program, module, declarations);
+        }
     }
 
     std::vector<Report> run()
@@ -132,10 +141,16 @@ private:
             {
                 return found->second;
             }
-            if (const Entry* entry = declarations.lookup(context.module, key);
-                entry != nullptr && entry->kind == EntryKind::Type)
+            if (const Entry* entry = declarations.lookup(context.module, key))
             {
-                return namedType(entry->type, std::vector<TypePtr>(entry->type->parameters.size(), unknownType()));
+                if (entry->kind == EntryKind::Type)
+                {
+                    return namedType(entry->type, std::vector<TypePtr>(entry->type->parameters.size(), unknownType()));
+                }
+                if (entry->kind == EntryKind::Const)
+                {
+                    return aliasedType(entry->constant, context);
+                }
             }
             return builtinType(key);
         }
@@ -202,6 +217,67 @@ private:
         }
     }
 
+    TypePtr aliasedType(const SyntaxNodeView& constant, const TypeContext& context)
+    {
+        if (constant.hasToken(Colon) || !aliasesInProgress.insert(constant.offset()).second)
+        {
+            return unknownType();
+        }
+        SyntaxNodeView initializer;
+        for (const SyntaxNodeView& part : constant.nodes())
+        {
+            if (part.kind() != Attribute)
+            {
+                initializer = part;
+            }
+        }
+        const bool typeLike = initializer
+            && (initializer.kind() == CallExpr || initializer.kind() == NameExpr || initializer.kind() == FieldExpr);
+        const TypePtr type =
+            typeLike ? resolveType(initializer, TypeContext{context.module, {}, nullptr}) : unknownType();
+        aliasesInProgress.erase(constant.offset());
+        return type;
+    }
+
+    static bool returnsType(const FunctionInfo& function)
+    {
+        bool afterArrow = false;
+        bool result = false;
+        function.signature.forEachChild([&](const SyntaxNodeView& child, const std::optional<SyntaxToken>& token)
+        {
+            if (token)
+            {
+                afterArrow = afterArrow || token->kind == Arrow;
+                return;
+            }
+            if (afterArrow && child.kind() == NameExpr && child.token(Identifier))
+            {
+                result = nameKey(child.token(Identifier)->text) == "тип";
+            }
+        });
+        return result;
+    }
+
+    TypePtr evaluateTypeCall(
+        const FunctionInfo& function, const std::vector<SyntaxNodeView>& argumentNodes, const TypeContext& context)
+    {
+        if (!evaluator)
+        {
+            return unknownType();
+        }
+        std::vector<TypePtr> arguments;
+        for (const SyntaxNodeView& argument : argumentNodes)
+        {
+            TypePtr type = resolveType(argument, context);
+            if (!isKnown(type))
+            {
+                return unknownType();
+            }
+            arguments.push_back(std::move(type));
+        }
+        return evaluator->evaluateType(function, arguments);
+    }
+
     const TypeDecl* memberType(SourceModule* context, const SyntaxNodeView& node)
     {
         const std::vector<SyntaxNodeView> parts = node.nodes();
@@ -245,6 +321,12 @@ private:
             }
             const Entry* entry = name ? declarations.lookup(context.module, nameKey(name->text)) : nullptr;
             decl = entry != nullptr && entry->kind == EntryKind::Type ? entry->type : nullptr;
+            if (entry != nullptr && entry->kind == EntryKind::Function && returnsType(*entry->function))
+            {
+                const SyntaxNodeView arguments = node.node(ArgList);
+                return evaluateTypeCall(
+                    *entry->function, arguments ? arguments.nodes() : std::vector<SyntaxNodeView>(), context);
+            }
         }
         else if (callee.kind() == FieldExpr)
         {
@@ -2240,6 +2322,7 @@ private:
         scopes.pop_back();
     }
 
+    Program& program;
     SourceModule& module;
     Language language;
     Declarations declarations;
@@ -2249,17 +2332,22 @@ private:
     TypeContext typeContext;
     bool regionContext = false;
     std::set<std::string> reportedBounds;
+    std::set<uint32_t> aliasesInProgress;
+    std::unique_ptr<ComptimeEvaluator> evaluator;
 };
 
 }
 
-std::vector<Report> checkTypes(Program& program, SourceModule& module, Language language)
+std::vector<Report> checkTypes(
+    Program& program, SourceModule& module, Language language, const EvaluatorFactory& evaluators)
 {
     if (module.kind != ModuleKind::Source || !module.root || !module.syntax.empty())
     {
         return {};
     }
-    return Checker(program, module, language).run();
+    Checker checker(program, module, language);
+    checker.attach(evaluators);
+    return checker.run();
 }
 
 }

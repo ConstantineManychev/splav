@@ -273,7 +273,25 @@ const Cell& Call::argumentCell(size_t index) const
 }
 
 Machine::Machine(Program& owner, SourceModule& main, const RunOptions& chosen)
-    : program(owner), entryModule(main), options(chosen), declarations(owner, main)
+    : program(owner), entryModule(main), options(chosen),
+      ownedDeclarations(std::make_unique<Declarations>(owner, main)), declarations(*ownedDeclarations)
+{
+    initialize();
+}
+
+Machine::Machine(Program& owner, SourceModule& main, Declarations& shared, const RunOptions& chosen)
+    : program(owner), entryModule(main), options(chosen), declarations(shared)
+{
+    initialize();
+}
+
+const std::vector<Local>* Machine::typeArgumentsOf(const TypeDecl* decl) const
+{
+    const auto found = typeArguments.find(decl);
+    return found == typeArguments.end() ? nullptr : &found->second;
+}
+
+void Machine::initialize()
 {
     registerBuiltins(builtins);
     for (const TypeDecl& decl : declarations.types)
@@ -1178,6 +1196,12 @@ Cell Machine::synthesize(const SyntaxNodeView& node)
             variants[described.key].emplace_back(&decl, static_cast<uint32_t>(decl.variants.size()));
             decl.variants.push_back(described);
         }
+    }
+    for (const Local& binding : bindings)
+    {
+        decl.parameters.push_back(binding.key);
+        decl.parameterDisplays.push_back(binding.key);
+        decl.bounds.emplace_back();
     }
     typeArguments[&decl] = std::move(bindings);
     instances.emplace(identity, &decl);

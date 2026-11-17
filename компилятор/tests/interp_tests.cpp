@@ -1,3 +1,4 @@
+#include "interp/comptime.hpp"
 #include "interp/interpreter.hpp"
 #include "sema/checker.hpp"
 #include "sema/names.hpp"
@@ -66,7 +67,7 @@ Execution runChecked(test::Context& context, const std::string& source)
     std::vector<Report> reports = resolveNames(program, *module, Language::Russian);
     if (reports.empty())
     {
-        reports = checkTypes(program, *module, Language::Russian);
+        reports = checkTypes(program, *module, Language::Russian, makeComptimeEvaluator);
     }
     for (const Report& report : reports)
     {
