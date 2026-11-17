@@ -6,11 +6,24 @@
 #include <cstdio>
 #include <fcntl.h>
 #include <io.h>
+#include <process.h>
 #include <shellapi.h>
+#else
+#include <pthread.h>
 #endif
 
 namespace splav
 {
+
+namespace
+{
+
+struct StackWork
+{
+    const std::function<void()>* work;
+};
+
+}
 
 #ifdef _WIN32
 
@@ -58,7 +71,60 @@ void prepareStandardStreams()
     _setmode(_fileno(stderr), _O_BINARY);
 }
 
+namespace
+{
+
+unsigned __stdcall runStackWork(void* argument)
+{
+    (*static_cast<StackWork*>(argument)->work)();
+    return 0;
+}
+
+}
+
+void runWithStack(size_t bytes, const std::function<void()>& work)
+{
+    StackWork context{&work};
+    const uintptr_t handle = _beginthreadex(
+        nullptr, static_cast<unsigned>(bytes), runStackWork, &context, STACK_SIZE_PARAM_IS_A_RESERVATION, nullptr);
+    if (handle == 0)
+    {
+        work();
+        return;
+    }
+    WaitForSingleObject(reinterpret_cast<HANDLE>(handle), INFINITE);
+    CloseHandle(reinterpret_cast<HANDLE>(handle));
+}
+
 #else
+
+namespace
+{
+
+void* runStackWork(void* argument)
+{
+    (*static_cast<StackWork*>(argument)->work)();
+    return nullptr;
+}
+
+}
+
+void runWithStack(size_t bytes, const std::function<void()>& work)
+{
+    StackWork context{&work};
+    pthread_attr_t attributes;
+    pthread_attr_init(&attributes);
+    pthread_attr_setstacksize(&attributes, bytes);
+    pthread_t thread;
+    const int created = pthread_create(&thread, &attributes, runStackWork, &context);
+    pthread_attr_destroy(&attributes);
+    if (created != 0)
+    {
+        work();
+        return;
+    }
+    pthread_join(thread, nullptr);
+}
 
 std::vector<std::string> utf8Arguments(int argc, char** argv)
 {

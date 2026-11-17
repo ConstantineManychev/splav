@@ -7,4 +7,7 @@ target_include_directories(splav_support PUBLIC "${PROJECT_SOURCE_DIR}/комп�
 target_link_libraries(splav_support PUBLIC splav_flags)
 if(WIN32)
     target_link_libraries(splav_support PRIVATE shell32)
+else()
+    find_package(Threads REQUIRED)
+    target_link_libraries(splav_support PUBLIC Threads::Threads)
 endif()

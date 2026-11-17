@@ -420,4 +420,29 @@ std::u32string skeleton(std::u32string_view text)
     return toNfd(mapped);
 }
 
+size_t graphemeEnd(std::string_view text, size_t offset)
+{
+    if (offset >= text.size())
+    {
+        return text.size();
+    }
+    const Decoded first = decodeUtf8(text, offset);
+    size_t position = offset + first.length;
+    if (first.codePoint == U'\r' && position < text.size() && text[position] == '\n')
+    {
+        return position + 1;
+    }
+    while (position < text.size())
+    {
+        const Decoded next = decodeUtf8(text, position);
+        if (isIdentifierMark(next.codePoint) || next.codePoint == U'\u200D')
+        {
+            position += next.length;
+            continue;
+        }
+        break;
+    }
+    return position;
+}
+
 }

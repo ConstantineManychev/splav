@@ -2,6 +2,7 @@ add_subdirectory(support)
 add_subdirectory(unicode)
 add_subdirectory(syntax)
 add_subdirectory(sema)
+add_subdirectory(interp)
 add_subdirectory(format)
 add_subdirectory(driver)
 

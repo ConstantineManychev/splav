@@ -43,4 +43,6 @@ std::u32string toNfd(std::u32string_view text);
 std::u32string toNfc(std::u32string_view text);
 std::u32string skeleton(std::u32string_view text);
 
+size_t graphemeEnd(std::string_view text, size_t offset);
+
 }
