@@ -127,3 +127,35 @@ SPLAV_TEST(checksCorpus, "имена и типы: корпус, библиоте
     }
     context.expect(checked > 600, "проверено больше 600 файлов");
 }
+
+SPLAV_TEST(respellsYoToDeclaration, "имена: е и ё приводятся к написанию объявления")
+{
+    Program program(context.root(), context.root() / pathFromUtf8("библиотека"));
+    const std::string source = "подключить ядро.ос\n"
+                               "\n"
+                               "конст ВСЁ: ц32 = 3\n"
+                               "\n"
+                               "функ ещё(счёт: ц32) -> ц32\n"
+                               "{\n"
+                               "    возврат счет + ВСЕ\n"
+                               "}\n"
+                               "\n"
+                               "функ вход() -> Итог(пусто, ос.ОшибкаВвода)\n"
+                               "{\n"
+                               "    изм счетчик: ц32 = 0\n"
+                               "    счётчик += еще(1)\n"
+                               "    `счетчик` += 1\n"
+                               "    возврат Успех()\n"
+                               "}\n";
+    Module* module = program.loadSource(source, "проба");
+    std::string respelled = source;
+    const std::vector<Respelling> respellings = canonicalSpellings(program, *module);
+    for (auto respelling = respellings.rbegin(); respelling != respellings.rend(); ++respelling)
+    {
+        respelled.replace(respelling->offset, respelling->length, respelling->text);
+    }
+    context.expectEqual(respellings.size(), size_t{4}, "число замен");
+    context.expect(respelled.find("возврат счёт + ВСЁ") != std::string::npos, "параметр и константа");
+    context.expect(respelled.find("    счетчик += ещё(1)") != std::string::npos, "привязка и функция");
+    context.expect(respelled.find("`счетчик` += 1") != std::string::npos, "экранированное имя остаётся как написано");
+}

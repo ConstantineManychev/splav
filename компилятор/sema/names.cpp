@@ -244,6 +244,18 @@ public:
         return std::move(reports);
     }
 
+    std::vector<Respelling> spellings()
+    {
+        run();
+        std::sort(respellings.begin(), respellings.end(),
+            [](const Respelling& left, const Respelling& right) { return left.offset < right.offset; });
+        respellings.erase(
+            std::unique(respellings.begin(), respellings.end(),
+                [](const Respelling& left, const Respelling& right) { return left.offset == right.offset; }),
+            respellings.end());
+        return std::move(respellings);
+    }
+
 private:
     std::string say(std::string_view russian, std::string_view english) const
     {
@@ -729,21 +741,42 @@ private:
         return nullptr;
     }
 
+    void noteSpelling(const SyntaxToken& token, const std::string& declared)
+    {
+        if (token.text.empty() || token.text.front() == '`' || declared.empty())
+        {
+            return;
+        }
+        if (identifierText(token) != declared)
+        {
+            respellings.push_back(Respelling{token.offset, static_cast<uint32_t>(token.text.size()), declared});
+        }
+    }
+
     std::optional<const Symbol*> resolveName(const SyntaxToken& token)
     {
         const std::string key = nameKey(token.text);
         if (Local* local = findLocal(key, typeOnly))
         {
             local->used = true;
+            noteSpelling(token, local->display);
             return nullptr;
         }
         if (const Symbol* symbol = fileSymbol(key))
         {
             noteConstReference(key, token, *symbol);
+            noteSpelling(token, symbol->display);
             return symbol;
         }
         if (isPreludeName(key) || (startsUppercase(token.text) && variants.contains(key)))
         {
+            if (preludeSymbols != nullptr)
+            {
+                if (const auto found = preludeSymbols->names.find(key); found != preludeSymbols->names.end())
+                {
+                    noteSpelling(token, found->second.display);
+                }
+            }
             return nullptr;
         }
         report(201, token.offset, static_cast<uint32_t>(token.text.size()),
@@ -852,6 +885,7 @@ private:
         if (Local* local = findLocal(key, typeOnly))
         {
             local->used = true;
+            noteSpelling(*receiver, local->display);
             const Symbol* shadowed = fileSymbol(key);
             if (shadowed != nullptr
                 && (shadowed->kind == SymbolKind::SourceModule || shadowed->kind == SymbolKind::Header))
@@ -882,7 +916,11 @@ private:
                 say("в модуле `", "module `") + owner.importPath + say("` нет имени `", "` has no name `")
                     + identifierText(member) + "`");
         }
-        else if (!found->second.open && owner.target != &module)
+        else
+        {
+            noteSpelling(member, found->second.display);
+        }
+        if (found != target.names.end() && !found->second.open && owner.target != &module)
         {
             report(205, member.offset, length,
                 say("имя `", "name `") + found->second.display + say("` модуля `", "` of module `") + owner.importPath
@@ -945,6 +983,7 @@ private:
             if (Local* local = findLocal(nameKey(name->text), false))
             {
                 local->used = true;
+                noteSpelling(*name, local->display);
                 if (!local->mutableBinding)
                 {
                     const bool parameter = local->kind != LocalKind::Binding;
@@ -1383,6 +1422,7 @@ private:
     std::vector<std::string> constOrder;
     std::map<std::string, SyntaxToken> constNames;
     std::map<std::string, std::vector<ConstEdge>> constEdges;
+    std::vector<Respelling> respellings;
 };
 
 }
@@ -1394,6 +1434,15 @@ std::vector<Report> resolveNames(Program& program, SourceModule& module, Languag
         return {};
     }
     return Resolver(program, module, language).run();
+}
+
+std::vector<Respelling> canonicalSpellings(Program& program, SourceModule& module)
+{
+    if (module.kind != ModuleKind::Source || !module.root || !module.syntax.empty())
+    {
+        return {};
+    }
+    return Resolver(program, module, Language::Russian).spellings();
 }
 
 }

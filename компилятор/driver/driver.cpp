@@ -157,6 +157,24 @@ bool reportNames(const Options& options, const std::string& path)
     return reports.empty();
 }
 
+std::string canonicallySpelled(const Options& options, const std::string& path, const std::string& source)
+{
+    const std::filesystem::path file = pathFromUtf8(path);
+    Program program = programFor(options, file);
+    Module* module = program.loadEntry(file);
+    if (module == nullptr || module->source != source)
+    {
+        return source;
+    }
+    std::string result = source;
+    const std::vector<Respelling> respellings = canonicalSpellings(program, *module);
+    for (auto respelling = respellings.rbegin(); respelling != respellings.rend(); ++respelling)
+    {
+        result.replace(respelling->offset, respelling->length, respelling->text);
+    }
+    return result;
+}
+
 bool reportDiagnostics(const Parse& parsed, std::string_view source, const std::string& path, Language language)
 {
     for (const Diagnostic& diagnostic : parsed.diagnostics)
@@ -239,8 +257,11 @@ int formatFiles(Arguments arguments)
             writeStandardError("сплав: не читается файл «" + path + "»\n");
             return 2;
         }
-        const Parse parsed = parse(*source, modeFor(options, path));
-        if (!reportDiagnostics(parsed, *source, path, options.language))
+        const ParseMode mode = modeFor(options, path);
+        const std::string respelled =
+            mode == ParseMode::Module && path != STANDARD_INPUT ? canonicallySpelled(options, path, *source) : *source;
+        const Parse parsed = parse(respelled, mode);
+        if (!reportDiagnostics(parsed, respelled, path, options.language))
         {
             clean = false;
             continue;
