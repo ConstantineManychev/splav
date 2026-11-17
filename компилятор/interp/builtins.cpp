@@ -5,6 +5,7 @@
 #include "support/utf8_path.hpp"
 #include "unicode/unicode.hpp"
 
+#include <algorithm>
 #include <charconv>
 #include <cmath>
 #include <cstdlib>
