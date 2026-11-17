@@ -1,5 +1,6 @@
 add_library(splav_sema STATIC
     checker.cpp
+    declarations.cpp
     names.cpp
     naming.cpp
     program.cpp
