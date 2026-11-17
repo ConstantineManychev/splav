@@ -34,6 +34,7 @@ public:
     std::vector<SyntaxNodeView> nodes() const;
     std::vector<SyntaxToken> tokens() const;
     SyntaxNodeView node(SyntaxKind kind) const;
+    SyntaxNodeView child(size_t index) const;
     std::optional<SyntaxToken> token(SyntaxKind kind) const;
     std::optional<SyntaxToken> firstToken() const;
     bool hasToken(SyntaxKind kind) const;

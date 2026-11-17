@@ -65,24 +65,42 @@ std::vector<SyntaxToken> SyntaxNodeView::tokens() const
 
 SyntaxNodeView SyntaxNodeView::node(SyntaxKind wanted) const
 {
-    for (const SyntaxNodeView& child : nodes())
+    uint32_t position = start;
+    for (const GreenElement& element : greenNode->children())
     {
-        if (child.kind() == wanted)
+        if (const GreenNode* child = element.node(); child != nullptr && child->kind() == wanted)
         {
-            return child;
+            return SyntaxNodeView(child, position);
         }
+        position += element.textLength();
     }
-    return {};
+    return SyntaxNodeView();
+}
+
+SyntaxNodeView SyntaxNodeView::child(size_t index) const
+{
+    uint32_t position = start;
+    for (const GreenElement& element : greenNode->children())
+    {
+        if (const GreenNode* found = element.node(); found != nullptr && index-- == 0)
+        {
+            return SyntaxNodeView(found, position);
+        }
+        position += element.textLength();
+    }
+    return SyntaxNodeView();
 }
 
 std::optional<SyntaxToken> SyntaxNodeView::token(SyntaxKind wanted) const
 {
-    for (const SyntaxToken& candidate : tokens())
+    uint32_t position = start;
+    for (const GreenElement& element : greenNode->children())
     {
-        if (candidate.kind == wanted)
+        if (element.node() == nullptr && element.kind() == wanted)
         {
-            return candidate;
+            return SyntaxToken{wanted, element.token()->text, position};
         }
+        position += element.textLength();
     }
     return std::nullopt;
 }
@@ -103,7 +121,14 @@ std::optional<SyntaxToken> SyntaxNodeView::firstToken() const
 
 bool SyntaxNodeView::hasToken(SyntaxKind wanted) const
 {
-    return token(wanted).has_value();
+    for (const GreenElement& element : greenNode->children())
+    {
+        if (element.node() == nullptr && element.kind() == wanted)
+        {
+            return true;
+        }
+    }
+    return false;
 }
 
 }

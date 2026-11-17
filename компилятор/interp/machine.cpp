@@ -1022,33 +1022,32 @@ Flow Machine::exec(const SyntaxNodeView& statement)
         return execAssign(statement);
     case ExprStmt:
     {
-        const std::vector<SyntaxNodeView> parts = statement.nodes();
-        if (parts.empty())
+        const SyntaxNodeView expression = statement.child(0);
+        if (!expression)
         {
             return Flow::Normal;
         }
-        if (parts.front().kind() == MatchExpr)
+        if (expression.kind() == MatchExpr)
         {
             Flow flow = Flow::Normal;
-            match(parts.front(), &flow);
+            match(expression, &flow);
             return flow;
         }
-        eval(parts.front());
+        eval(expression);
         return Flow::Normal;
     }
     case DiscardStmt:
     {
-        const std::vector<SyntaxNodeView> parts = statement.nodes();
-        if (!parts.empty())
+        if (const SyntaxNodeView expression = statement.child(0))
         {
-            eval(parts.front());
+            eval(expression);
         }
         return Flow::Normal;
     }
     case ReturnStmt:
     {
-        const std::vector<SyntaxNodeView> parts = statement.nodes();
-        Cell value = parts.empty() ? voidCell() : consume(eval(parts.front()));
+        const SyntaxNodeView expression = statement.child(0);
+        Cell value = expression ? consume(eval(expression)) : voidCell();
         frame().returned = std::move(value);
         return Flow::Return;
     }
@@ -1131,29 +1130,28 @@ Flow Machine::execBinding(const SyntaxNodeView& statement)
 
 Flow Machine::execAssign(const SyntaxNodeView& statement)
 {
-    const std::vector<SyntaxNodeView> parts = statement.nodes();
-    if (parts.size() < 2)
+    const SyntaxNodeView target = statement.child(0);
+    const SyntaxNodeView source = statement.child(1);
+    if (!source)
     {
         return Flow::Normal;
     }
     SyntaxKind operation = Eq;
     uint32_t operatorOffset = statement.offset();
-    for (const SyntaxToken& token : statement.tokens())
+    statement.forEachChild([&](const SyntaxNodeView&, const std::optional<SyntaxToken>& token)
     {
-        if (isAssignmentOperator(token.kind))
+        if (token && operation == Eq && isAssignmentOperator(token->kind))
         {
-            operation = token.kind;
-            operatorOffset = token.offset;
-            break;
+            operation = token->kind;
+            operatorOffset = token->offset;
         }
-    }
-    const SyntaxNodeView& target = parts.front();
+    });
     if (operation == Eq)
     {
         if (target.kind() == NameExpr && target.token(Identifier))
         {
             const std::string key = keyOf(*target.token(Identifier));
-            Cell value = consume(eval(parts[1]));
+            Cell value = consume(eval(source));
             if (Cell* existing = findLocal(key))
             {
                 assignTo(*existing, std::move(value));
@@ -1166,16 +1164,16 @@ Flow Machine::execAssign(const SyntaxNodeView& statement)
         }
         if (target.kind() == TupleExpr || target.kind() == CallExpr || target.kind() == CompoundLiteral)
         {
-            const Cell value = eval(parts[1]);
+            const Cell value = eval(source);
             destructure(target, value);
             return Flow::Normal;
         }
         const Cell place = eval(target);
-        assignTo(place, consume(eval(parts[1])));
+        assignTo(place, consume(eval(source)));
         return Flow::Normal;
     }
     const Cell place = eval(target);
-    const Cell value = eval(parts[1]);
+    const Cell value = eval(source);
     currentOffset = operatorOffset;
     assignTo(place, arithmetic(*compoundOperation(operation), place, value));
     return Flow::Normal;
@@ -1284,18 +1282,19 @@ void Machine::destructure(const SyntaxNodeView& target, const Cell& input)
 Flow Machine::execIf(const SyntaxNodeView& statement)
 {
     ScopeGuard guard(frame());
-    const std::vector<SyntaxNodeView> parts = statement.nodes();
-    if (parts.size() < 2)
+    const SyntaxNodeView condition = statement.child(0);
+    const SyntaxNodeView then = statement.child(1);
+    if (!then)
     {
         return Flow::Normal;
     }
-    if (truth(eval(parts[0])))
+    if (truth(eval(condition)))
     {
-        return execBlock(parts[1]);
+        return execBlock(then);
     }
-    if (parts.size() > 2)
+    if (const SyntaxNodeView otherwise = statement.child(2))
     {
-        return parts[2].kind() == IfStmt ? execIf(parts[2]) : execBlock(parts[2]);
+        return otherwise.kind() == IfStmt ? execIf(otherwise) : execBlock(otherwise);
     }
     return Flow::Normal;
 }
@@ -1817,10 +1816,7 @@ Cell Machine::eval(const SyntaxNodeView& node)
     case LogicalExpr:
         return logical(node);
     case NotExpr:
-    {
-        const std::vector<SyntaxNodeView> parts = node.nodes();
-        return boolCell(!truth(eval(parts.front())));
-    }
+        return boolCell(!truth(eval(node.child(0))));
     case MembershipExpr:
         return membership(node);
     case IsExpr:
@@ -1854,8 +1850,8 @@ Cell Machine::eval(const SyntaxNodeView& node)
     }
     case ParenExpr:
     {
-        const std::vector<SyntaxNodeView> parts = node.nodes();
-        return parts.empty() ? voidCell() : eval(parts.front());
+        const SyntaxNodeView inner = node.child(0);
+        return inner ? eval(inner) : voidCell();
     }
     case TupleExpr:
     {
@@ -2044,13 +2040,13 @@ Cell Machine::name(const SyntaxNodeView& node)
 
 Cell Machine::field(const SyntaxNodeView& node)
 {
-    const std::vector<SyntaxNodeView> parts = node.nodes();
+    const SyntaxNodeView receiverNode = node.child(0);
     const std::optional<SyntaxToken> member = node.token(Identifier);
-    if (parts.empty() || !member)
+    if (!receiverNode || !member)
     {
         panic("обращение к полю без имени");
     }
-    const Cell receiver = eval(parts.front());
+    const Cell receiver = eval(receiverNode);
     currentOffset = member->offset;
     return this->member(receiver, keyOf(*member), member->text);
 }
@@ -2141,7 +2137,6 @@ Cell Machine::member(const Cell& receiver, const std::string& key, std::string_v
 
 Cell Machine::call(const SyntaxNodeView& node)
 {
-    const std::vector<SyntaxNodeView> parts = node.nodes();
     const SyntaxNodeView argumentList = node.node(ArgList);
     const std::vector<SyntaxNodeView> argumentNodes =
         argumentList ? argumentList.nodes() : std::vector<SyntaxNodeView>();
@@ -2155,7 +2150,7 @@ Cell Machine::call(const SyntaxNodeView& node)
         }
         return values;
     };
-    const SyntaxNodeView& callee = parts.front();
+    const SyntaxNodeView callee = node.child(0);
     if (callee.kind() == NameExpr && callee.token(Identifier))
     {
         const SyntaxToken token = *callee.token(Identifier);
@@ -2205,10 +2200,9 @@ Cell Machine::call(const SyntaxNodeView& node)
     }
     if (callee.kind() == FieldExpr && callee.token(Identifier))
     {
-        const std::vector<SyntaxNodeView> calleeParts = callee.nodes();
         const SyntaxToken token = *callee.token(Identifier);
         const std::string key = keyOf(token);
-        const Cell receiver = eval(calleeParts.front());
+        const Cell receiver = eval(callee.child(0));
         const Cell& target = dereference(receiver);
         if (target->kind == ValueKind::Module)
         {
@@ -2317,13 +2311,14 @@ Cell Machine::nativeMethod(const Cell& receiver, const std::string& key, std::ve
 
 Cell Machine::index(const SyntaxNodeView& node)
 {
-    const std::vector<SyntaxNodeView> parts = node.nodes();
-    if (parts.size() < 2)
+    const SyntaxNodeView receiverNode = node.child(0);
+    const SyntaxNodeView positionNode = node.child(1);
+    if (!positionNode)
     {
         panic("индекс без значения");
     }
-    const Cell receiver = dereference(eval(parts[0]));
-    const Cell position = eval(parts[1]);
+    const Cell receiver = dereference(eval(receiverNode));
+    const Cell position = eval(positionNode);
     currentOffset = node.offset();
     const Cell& bound = dereference(position);
     const size_t length = receiver->kind == ValueKind::List ? listLength(*receiver)
@@ -2417,15 +2412,15 @@ Cell Machine::arithmetic(SyntaxKind operation, const Cell& leftCell, const Cell&
             return invoke(*method, leftCell, {rightCell});
         }
     }
-    const std::string symbol(fixedText(operation));
+    const auto symbol = [operation] { return std::string(fixedText(operation)); };
     if (left.kind == ValueKind::Integer && right.kind == ValueKind::Integer)
     {
         const bool shift = operation == Shl || operation == Shr;
         const Number number = shift || left.number != Number::Untyped ? left.number : right.number;
         const auto overflow = [&]
         {
-            panic("переполнение `" + std::string(numberName(number)) + "`: " + integerText(left.integer) + " " + symbol
-                + " " + integerText(right.integer));
+            panic("переполнение `" + std::string(numberName(number)) + "`: " + integerText(left.integer) + " "
+                + symbol() + " " + integerText(right.integer));
         };
         std::optional<WideInteger> result;
         switch (operation)
@@ -2503,7 +2498,7 @@ Cell Machine::arithmetic(SyntaxKind operation, const Cell& leftCell, const Cell&
             return integerCell(integerFromBits(bits >> amount, number), number);
         }
         default:
-            panic("операция `" + symbol + "` не определена для целых");
+            panic("операция `" + symbol() + "` не определена для целых");
         }
         if (!result || !fits(*result, number))
         {
@@ -2534,7 +2529,8 @@ Cell Machine::arithmetic(SyntaxKind operation, const Cell& leftCell, const Cell&
             break;
         }
     }
-    panic("операция `" + symbol + "` не определена для `" + valueKindName(left) + "` и `" + valueKindName(right) + "`");
+    panic(
+        "операция `" + symbol() + "` не определена для `" + valueKindName(left) + "` и `" + valueKindName(right) + "`");
 }
 
 Cell Machine::vectorArithmetic(SyntaxKind operation, const Cell& leftCell, const Cell& rightCell)
@@ -2626,18 +2622,17 @@ Cell Machine::checkedArithmetic(SyntaxKind operation, const Cell& leftCell, cons
 
 Cell Machine::comparison(const SyntaxNodeView& node)
 {
-    const std::vector<SyntaxNodeView> parts = node.nodes();
     SyntaxKind operation = EqEq;
-    for (const SyntaxToken& token : node.tokens())
+    for (const GreenElement& element : node.green()->children())
     {
-        if (isComparisonOperator(token.kind))
+        if (element.node() == nullptr && isComparisonOperator(element.kind()))
         {
-            operation = token.kind;
+            operation = element.kind();
             break;
         }
     }
-    const Cell left = eval(parts[0]);
-    const Cell right = eval(parts[1]);
+    const Cell left = eval(node.child(0));
+    const Cell right = eval(node.child(1));
     currentOffset = node.offset();
     switch (operation)
     {
