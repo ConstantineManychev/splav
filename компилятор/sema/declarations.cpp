@@ -291,9 +291,11 @@ void Declarations::describe(TypeDecl& decl)
                 {
                     continue;
                 }
+                const std::optional<SyntaxToken> label = field.token(Identifier);
                 for (const SyntaxNodeView& part : field.nodes())
                 {
                     described.payload.push_back(part);
+                    described.labels.push_back(label ? nameKey(label->text) : std::string());
                 }
             }
             decl.variants.push_back(described);

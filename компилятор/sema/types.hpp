@@ -67,6 +67,7 @@ struct VariantDecl
     std::string key;
     std::string display;
     std::vector<SyntaxNodeView> payload;
+    std::vector<std::string> labels;
 };
 
 enum class DeclKind

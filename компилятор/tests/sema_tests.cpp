@@ -8,7 +8,6 @@
 #include "tests/test.hpp"
 
 #include <algorithm>
-#include <set>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -25,7 +24,6 @@ constexpr std::string_view FIXED_TWIN_SUFFIX = ".верно.спл";
 constexpr std::string_view DIAGNOSTICS_EXTENSION = ".диаг";
 constexpr size_t EXPECTED_NAME_EXAMPLES = 11;
 constexpr size_t EXPECTED_TYPE_EXAMPLES = 17;
-const std::set<std::string> CHECKED_BY_MODEL = {"01-неполныйВыбор.спл", "02-недостижимаяВетвь.спл"};
 
 std::string resolved(const std::filesystem::path& root, const std::filesystem::path& file)
 {
@@ -57,7 +55,7 @@ std::string trimmed(std::string text)
     return text;
 }
 
-size_t compareExamples(test::Context& context, std::string_view directoryName, const std::set<std::string>& silent)
+size_t compareExamples(test::Context& context, std::string_view directoryName)
 {
     const std::filesystem::path directory = context.root() / pathFromUtf8(directoryName);
     std::vector<std::filesystem::path> files;
@@ -80,11 +78,6 @@ size_t compareExamples(test::Context& context, std::string_view directoryName, c
             continue;
         }
         ++examples;
-        if (silent.contains(name))
-        {
-            context.expectEqual(actual, std::string(), name + ": проверяет модель, у компилятора ошибок нет");
-            continue;
-        }
         std::filesystem::path diagnostics = file;
         diagnostics.replace_extension(pathFromUtf8(DIAGNOSTICS_EXTENSION));
         const std::optional<std::string> expected = readFile(diagnostics);
@@ -98,14 +91,12 @@ size_t compareExamples(test::Context& context, std::string_view directoryName, c
 
 SPLAV_TEST(resolvesNameExamples, "имена: злые примеры С02xx дают ровно свой .диаг, двойники чисты")
 {
-    context.expectEqual(
-        compareExamples(context, NAME_EXAMPLES, {}), EXPECTED_NAME_EXAMPLES, "число злых примеров имён");
+    context.expectEqual(compareExamples(context, NAME_EXAMPLES), EXPECTED_NAME_EXAMPLES, "число злых примеров имён");
 }
 
-SPLAV_TEST(checksTypeExamples, "типы: злые примеры С0303–С0316 дают ровно свой .диаг, двойники чисты")
+SPLAV_TEST(checksTypeExamples, "типы: злые примеры С0301–С0316 дают ровно свой .диаг, двойники чисты")
 {
-    context.expectEqual(
-        compareExamples(context, TYPE_EXAMPLES, CHECKED_BY_MODEL), EXPECTED_TYPE_EXAMPLES, "число злых примеров типов");
+    context.expectEqual(compareExamples(context, TYPE_EXAMPLES), EXPECTED_TYPE_EXAMPLES, "число злых примеров типов");
 }
 
 SPLAV_TEST(checksCorpus, "имена и типы: корпус, библиотека, злые примеры памяти и сочетания без ошибок")
@@ -210,4 +201,87 @@ SPLAV_TEST(skipsDeadComptimeBranch, "типы: неактивная ветвь `
     }
     context.expectEqual(text, std::string("21:23 ошибка С0303 «5»: ожидался тип `стр`, а получен `компил_цел`\n"),
         "только активная ветвь");
+}
+
+SPLAV_TEST(checksMatchCoverage, "типы: полнота `выбор` (С0301) и недостижимые ветви (С0302) как в модели")
+{
+    Program program(context.root(), context.root() / pathFromUtf8("библиотека"));
+    const std::string source = R"(переч Фигура
+{
+    Круг(радиус: в64)
+    Отрезок(ц32, ц32)
+    Ничто
+}
+
+структ Точка
+{
+    х: ц32
+    у: бул
+}
+
+функ пары(п: (бул, бул)) -> ц32
+{
+    возврат выбор п
+    {
+        (да, _) => 1
+        (_, нет) => 2
+    }
+}
+
+функ вложенная(о: ?Фигура) -> ц32
+{
+    возврат выбор о
+    {
+        Есть(Круг(_)) => 1
+        Есть(Ничто) => 2
+        Ничего => 3
+    }
+}
+
+функ поля(т: Точка) -> ц32
+{
+    возврат выбор т
+    {
+        Точка { у: да, х: _ } => 1
+        Точка { у: нет } => 2
+        Точка { х: 3 } => 3
+    }
+}
+
+функ охрана(ф: Фигура) -> ц32
+{
+    возврат выбор ф
+    {
+        Круг(радиус: _) => 1
+        Отрезок(первый, _) если первый > 0 => первый
+        Ничто => 3
+    }
+}
+
+функ полная(ф: Фигура, б: бул) -> ц32
+{
+    возврат выбор (ф, б)
+    {
+        (Круг(_), _) или (Ничто, _) => 1
+        (Отрезок(_, второй), да) => второй
+        (Отрезок(первый, _), нет) => первый
+    }
+}
+)";
+    Module* module = program.loadSource(source, "проба");
+    std::vector<Report> reports = resolveNames(program, *module, Language::Russian, makeComptimeEvaluator);
+    context.expectEqual(reports.size(), size_t{0}, "ошибки имён");
+    reports = checkTypes(program, *module, Language::Russian, makeComptimeEvaluator);
+    std::string text;
+    for (const Report& report : reports)
+    {
+        text += renderReport(report, module->source, Language::Russian) + "\n";
+    }
+    context.expectEqual(text,
+        std::string("16:13 ошибка С0301 «выбор»: `выбор` перебирает не все значения: нет ветви для `(нет, да)`\n"
+                    "25:13 ошибка С0301 «выбор»: `выбор` перебирает не все значения: нет ветви для "
+                    "`Есть(Отрезок(_, _))`\n"
+                    "39:9 ошибка С0302 «Точка { х: 3 }»: ветвь недостижима: все её значения разбирают ветви выше\n"
+                    "45:13 ошибка С0301 «выбор»: `выбор` перебирает не все значения: нет ветви для `Отрезок(_, _)`\n"),
+        "отчёты о полноте");
 }

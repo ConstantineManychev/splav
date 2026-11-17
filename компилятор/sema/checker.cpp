@@ -1,5 +1,6 @@
 #include "sema/checker.hpp"
 
+#include "sema/coverage.hpp"
 #include "sema/declarations.hpp"
 #include "sema/naming.hpp"
 #include "sema/syntax_view.hpp"
@@ -2300,7 +2301,85 @@ private:
             }
             scopes.pop_back();
         }
+        checkCoverageOf(node, scrutinee);
         return result;
+    }
+
+    void checkCoverageOf(const SyntaxNodeView& node, const TypePtr& scrutinee)
+    {
+        std::vector<ArmPattern> arms;
+        for (const SyntaxNodeView& part : node.nodes())
+        {
+            if (part.kind() == MatchArm && !part.nodes().empty())
+            {
+                arms.push_back(ArmPattern{part.nodes().front(), part.hasToken(KwIf)});
+            }
+        }
+        const Coverage coverage =
+            checkCoverage(arms, scrutinee, [this](const TypePtr& type) { return patternConstructors(type); });
+        if (coverage.missing)
+        {
+            const std::optional<SyntaxToken> keyword = node.token(KwMatch);
+            report(301, keyword->offset, static_cast<uint32_t>(keyword->text.size()),
+                say("`выбор` перебирает не все значения: нет ветви для `",
+                    "`выбор` does not cover all values: no arm for `")
+                    + *coverage.missing + "`");
+        }
+        for (const SyntaxNodeView& pattern : coverage.unreachable)
+        {
+            reportNode(302, pattern,
+                say("ветвь недостижима: все её значения разбирают ветви выше",
+                    "unreachable arm: all its values are matched by the arms above"));
+        }
+    }
+
+    std::optional<std::vector<PatternConstructor>> patternConstructors(const TypePtr& type)
+    {
+        const TypePtr stripped = stripReferences(type);
+        if (!stripped)
+        {
+            return std::nullopt;
+        }
+        switch (stripped->kind)
+        {
+        case TypeKind::Optional:
+            return std::vector<PatternConstructor>{
+                {nameKey("Есть"), "Есть", {std::string()}, {stripped->inner ? stripped->inner : unknownType()}},
+                {nameKey("Ничего"), "Ничего", {}, {}},
+            };
+        case TypeKind::Bool:
+            return std::vector<PatternConstructor>{{"да", "да", {}, {}}, {"нет", "нет", {}, {}}};
+        case TypeKind::Tuple:
+            return std::vector<PatternConstructor>{
+                {"()", "()", std::vector<std::string>(stripped->arguments.size()), stripped->arguments}};
+        case TypeKind::Named:
+            break;
+        default:
+            return std::nullopt;
+        }
+        const TypeDecl& decl = *stripped->decl;
+        if (decl.kind == DeclKind::Enum)
+        {
+            std::vector<PatternConstructor> constructors;
+            for (const VariantDecl& variant : decl.variants)
+            {
+                constructors.push_back(
+                    {variant.key, variant.display, variant.labels, variantPayload(stripped, variant.key)});
+            }
+            return constructors;
+        }
+        if (decl.kind != DeclKind::Struct || decl.fields.empty())
+        {
+            return std::nullopt;
+        }
+        PatternConstructor constructor{decl.key, decl.display, {}, {}};
+        const TypeContext context = contextFor(stripped);
+        for (const FieldDecl& field : decl.fields)
+        {
+            constructor.labels.push_back(field.key);
+            constructor.types.push_back(resolveType(field.type, context));
+        }
+        return std::vector<PatternConstructor>{constructor};
     }
 
     static bool isExpressionKind(const SyntaxNodeView& node)
