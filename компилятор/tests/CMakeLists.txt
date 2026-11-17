@@ -2,7 +2,7 @@ splav_add_executable(splav_tests
     corpus.cpp
     format_tests.cpp
     main.cpp
-    names_tests.cpp
+    sema_tests.cpp
     support_tests.cpp
     syntax_tests.cpp
     test.cpp

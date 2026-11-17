@@ -1,5 +1,7 @@
 #include "sema/names.hpp"
 
+#include "sema/naming.hpp"
+
 #include "sema/syntax_view.hpp"
 #include "syntax/lexer.hpp"
 #include "unicode/unicode.hpp"
@@ -61,52 +63,6 @@ constexpr std::array BUILTIN_VALUES = {
 };
 constexpr size_t SIMILAR_NAME_DISTANCE = 1;
 
-std::string nameKey(std::string_view lexeme)
-{
-    std::string name = normalizedName(lexeme);
-    std::string key;
-    key.reserve(name.size());
-    for (size_t index = 0; index < name.size(); ++index)
-    {
-        const unsigned char lead = static_cast<unsigned char>(name[index]);
-        const unsigned char next = index + 1 < name.size() ? static_cast<unsigned char>(name[index + 1]) : 0;
-        if (lead == 0xD1 && next == 0x91)
-        {
-            key += "\xD0\xB5";
-            ++index;
-        }
-        else if (lead == 0xD0 && next == 0x81)
-        {
-            key += "\xD0\x95";
-            ++index;
-        }
-        else
-        {
-            key += name[index];
-        }
-    }
-    return key;
-}
-
-std::u32string decoded(std::string_view text)
-{
-    std::u32string result;
-    size_t offset = 0;
-    while (offset < text.size())
-    {
-        const unicode::Decoded symbol = unicode::decodeUtf8(text, offset);
-        result += symbol.codePoint;
-        offset += std::max<size_t>(1, symbol.length);
-    }
-    return result;
-}
-
-bool startsUppercase(std::string_view name)
-{
-    const std::u32string symbols = decoded(name);
-    return !symbols.empty() && unicode::isUppercase(symbols.front());
-}
-
 size_t editDistance(const std::u32string& left, const std::u32string& right)
 {
     std::vector<size_t> previous(right.size() + 1);
@@ -130,14 +86,14 @@ size_t editDistance(const std::u32string& left, const std::u32string& right)
 
 std::string skeletonOf(std::string_view name)
 {
-    return unicode::encodeUtf8(unicode::skeleton(unicode::toNfc(decoded(normalizedName(name)))));
+    return unicode::encodeUtf8(unicode::skeleton(unicode::toNfc(decodedName(normalizedName(name)))));
 }
 
 std::string_view writtenScript(std::string_view name, Language language)
 {
     bool latin = false;
     bool cyrillic = false;
-    for (const char32_t symbol : decoded(name))
+    for (const char32_t symbol : decodedName(name))
     {
         const unicode::Script script = unicode::identifierScript(symbol);
         latin = latin || script == unicode::Script::Latin;
@@ -158,7 +114,7 @@ std::string_view writtenScript(std::string_view name, Language language)
 std::string aliasSuggestion(const std::string& name)
 {
     constexpr std::u32string_view VOWELS = U"аеёиоуыэюяaeiouy";
-    const std::u32string symbols = decoded(name);
+    const std::u32string symbols = decodedName(name);
     std::u32string shortened;
     for (size_t index = 0; index < symbols.size(); ++index)
     {
@@ -709,7 +665,7 @@ private:
         local.mutableBinding = mutableBinding;
         local.used = kind != LocalKind::Binding;
         local.skeleton = skeletonOf(local.display);
-        local.written = decoded(local.display);
+        local.written = decodedName(local.display);
         for (const std::vector<Local*>& scope : scopes)
         {
             for (const Local* visible : scope)

@@ -1,6 +1,7 @@
 #include "driver/driver.hpp"
 
 #include "format/formatter.hpp"
+#include "sema/checker.hpp"
 #include "sema/names.hpp"
 #include "sema/program.hpp"
 #include "support/file_io.hpp"
@@ -137,7 +138,11 @@ bool reportNames(const Options& options, const std::string& path)
     {
         return true;
     }
-    const std::vector<Report> reports = resolveNames(program, *module, options.language);
+    std::vector<Report> reports = resolveNames(program, *module, options.language);
+    if (reports.empty())
+    {
+        reports = checkTypes(program, *module, options.language);
+    }
     for (const Report& report : reports)
     {
         writeStandardError(path + ":" + renderReport(report, module->source, options.language) + "\n");
