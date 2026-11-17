@@ -1,11 +1,14 @@
 #include "driver/driver.hpp"
 
 #include "format/formatter.hpp"
+#include "sema/names.hpp"
+#include "sema/program.hpp"
 #include "support/file_io.hpp"
 #include "support/utf8_path.hpp"
 #include "syntax/parser.hpp"
 
 #include <array>
+#include <filesystem>
 #include <optional>
 #include <span>
 #include <string_view>
@@ -31,6 +34,7 @@ struct Options
     Language language = Language::Russian;
     std::optional<ParseMode> mode;
     std::vector<std::string> paths;
+    std::optional<std::string> library;
     bool check = false;
     bool valid = true;
 };
@@ -42,6 +46,7 @@ Options parseOptions(Arguments arguments)
 {
     constexpr std::string_view MODE = "--режим=";
     constexpr std::string_view LANGUAGE = "--язык=";
+    constexpr std::string_view LIBRARY = "--библиотека=";
     Options options;
     for (const std::string& argument : arguments)
     {
@@ -78,6 +83,10 @@ Options parseOptions(Arguments arguments)
                 options.valid = false;
             }
         }
+        else if (view.starts_with(LIBRARY))
+        {
+            options.library = std::string(view.substr(LIBRARY.size()));
+        }
         else if (view == "--проверить" || view == "--check")
         {
             options.check = true;
@@ -111,6 +120,29 @@ ParseMode modeFor(const Options& options, const std::string& path)
     }
     const bool manifest = path != STANDARD_INPUT && utf8FromPath(pathFromUtf8(path).filename()) == MANIFEST_NAME;
     return manifest ? ParseMode::Manifest : ParseMode::Module;
+}
+
+bool reportNames(const Options& options, const std::string& path)
+{
+    const std::filesystem::path file = pathFromUtf8(path);
+    std::optional<std::filesystem::path> library =
+        options.library ? std::optional(pathFromUtf8(*options.library)) : findLibraryRoot(file.parent_path());
+    if (!library)
+    {
+        library = findLibraryRoot(std::filesystem::current_path());
+    }
+    Program program(findPackageRoot(file), library);
+    Module* module = program.loadEntry(file);
+    if (module == nullptr)
+    {
+        return true;
+    }
+    const std::vector<Report> reports = resolveNames(program, *module, options.language);
+    for (const Report& report : reports)
+    {
+        writeStandardError(path + ":" + renderReport(report, module->source, options.language) + "\n");
+    }
+    return reports.empty();
 }
 
 bool reportDiagnostics(const Parse& parsed, std::string_view source, const std::string& path, Language language)
@@ -154,8 +186,8 @@ int checkFiles(Arguments arguments)
     const Options options = parseOptions(arguments);
     if (!options.valid || options.paths.empty())
     {
-        writeStandardError(
-            "использование: сплав проверить [--режим=модуль|фрагмент|манифест] [--язык=ru|en] <файлы…>\n");
+        writeStandardError("использование: сплав проверить [--режим=модуль|фрагмент|манифест] [--язык=ru|en] "
+                           "[--библиотека=путь] <файлы…>\n");
         return 2;
     }
     bool clean = true;
@@ -167,8 +199,12 @@ int checkFiles(Arguments arguments)
             writeStandardError("сплав: не читается файл «" + path + "»\n");
             return 2;
         }
-        const Parse parsed = parse(*source, modeFor(options, path));
-        clean = reportDiagnostics(parsed, *source, path, options.language) && clean;
+        const ParseMode mode = modeFor(options, path);
+        const Parse parsed = parse(*source, mode);
+        const bool syntaxClean = reportDiagnostics(parsed, *source, path, options.language);
+        const bool namesClean =
+            !syntaxClean || mode != ParseMode::Module || path == STANDARD_INPUT || reportNames(options, path);
+        clean = syntaxClean && namesClean && clean;
     }
     return clean ? 0 : 1;
 }
