@@ -702,6 +702,46 @@ private:
         add(SyntaxKind::Identifier);
     }
 
+    bool followsName(size_t lineStart) const
+    {
+        if (position == lineStart)
+        {
+            return false;
+        }
+        size_t previous = position - 1;
+        while (previous > lineStart && (static_cast<unsigned char>(source[previous]) & 0xC0) == 0x80)
+        {
+            --previous;
+        }
+        const unicode::Decoded decoded = unicode::decodeUtf8(source, previous);
+        return decoded.valid && (decoded.codePoint == U'`' || unicode::isIdentifierContinue(decoded.codePoint));
+    }
+
+    bool semicolonStandsForColon() const
+    {
+        const size_t lineStart = position == 0 ? 0 : source.rfind('\n', position - 1) + 1;
+        const size_t lineEnd = std::min(source.find('\n', position), source.size());
+        std::string_view tail = source.substr(position + 1, lineEnd - position - 1);
+        const size_t first = tail.find_first_not_of(" \t\r");
+        tail = first == std::string_view::npos ? std::string_view() : tail.substr(first);
+        const bool assignmentBefore =
+            source.substr(lineStart, position - lineStart).find('=') != std::string_view::npos;
+        return followsName(lineStart) && !tail.empty() && !tail.starts_with("//") && !assignmentBefore;
+    }
+
+    Message unknownCharacterMessage(char32_t codePoint) const
+    {
+        if (codePoint == U';')
+        {
+            return semicolonStandsForColon() ? Message::SemicolonForColon : Message::UnknownSemicolon;
+        }
+        if (codePoint == U'\u2116')
+        {
+            return Message::NumeroSign;
+        }
+        return unicode::isForeignLetter(codePoint) ? Message::ForeignLetter : Message::UnknownCharacter;
+    }
+
     void scanPunctuation(const unicode::Decoded& decoded)
     {
         for (const SyntaxKind kind : PUNCTUATION_BY_LENGTH)
@@ -716,8 +756,8 @@ private:
         }
         if (decoded.valid)
         {
-            const Message message = decoded.codePoint == U';' ? Message::UnknownSemicolon : Message::UnknownCharacter;
-            report(message, position, position + decoded.length).text = hexCode(decoded.codePoint);
+            report(unknownCharacterMessage(decoded.codePoint), position, position + decoded.length).text =
+                hexCode(decoded.codePoint);
         }
         position += decoded.length;
         add(SyntaxKind::Error);

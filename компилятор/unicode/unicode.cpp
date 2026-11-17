@@ -321,7 +321,13 @@ bool isIdentifierStart(char32_t codePoint)
 
 bool isIdentifierContinue(char32_t codePoint)
 {
-    return codePoint == U'_' || (codePoint >= U'0' && codePoint <= U'9') || identifierFlags(codePoint) != 0;
+    return codePoint == U'_' || (codePoint >= U'0' && codePoint <= U'9')
+        || (identifierFlags(codePoint) & (LETTER | MARK)) != 0;
+}
+
+bool isForeignLetter(char32_t codePoint)
+{
+    return (identifierFlags(codePoint) & (LETTER | MARK | OTHER)) == OTHER;
 }
 
 Script identifierScript(char32_t codePoint)

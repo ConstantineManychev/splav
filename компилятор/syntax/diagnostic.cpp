@@ -87,6 +87,14 @@ std::string russianMessage(const Diagnostic& diagnostic)
         return "неизвестный символ U+" + diagnostic.text;
     case Message::UnknownSemicolon:
         return "неизвестный символ U+003B: точек с запятой в языке нет, инструкцию завершает перевод строки";
+    case Message::SemicolonForColon:
+        return "неизвестный символ U+003B: вероятно, `:` — в латинской раскладке `;` и `:` на одной клавише";
+    case Message::NumeroSign:
+        return "неизвестный символ U+2116: это Shift+3 русской раскладки на месте `#`, но и `#` в языке нет — "
+               "атрибуты пишут в `[…]`, комментарии — `//`";
+    case Message::ForeignLetter:
+        return "неизвестный символ U+" + diagnostic.text
+            + ": имя с буквами других письменностей заключают в обратные кавычки";
     case Message::MixedScripts:
         return "смешение письменностей в сегменте `" + diagnostic.text
             + "`: " + std::string(scriptName(diagnostic.rare, LANGUAGE)) + " " + diagnostic.list + " среди "
@@ -159,6 +167,13 @@ std::string englishMessage(const Diagnostic& diagnostic)
         return "unknown character U+" + diagnostic.text;
     case Message::UnknownSemicolon:
         return "unknown character U+003B: the language has no semicolons, a line break ends a statement";
+    case Message::SemicolonForColon:
+        return "unknown character U+003B: probably `:`, which shares the key with `;` in the Latin layout";
+    case Message::NumeroSign:
+        return "unknown character U+2116: Shift+3 of the Russian layout in place of `#`, but `#` is not used "
+               "either: attributes go in `[…]`, comments start with `//`";
+    case Message::ForeignLetter:
+        return "unknown character U+" + diagnostic.text + ": a name with letters of other scripts goes in backticks";
     case Message::MixedScripts:
         return "mixed scripts in segment `" + diagnostic.text
             + "`: " + std::string(scriptName(diagnostic.rare, LANGUAGE)) + " " + diagnostic.list + " among "
@@ -230,6 +245,9 @@ uint16_t codeOf(Message message)
         return 101;
     case Message::UnknownCharacter:
     case Message::UnknownSemicolon:
+    case Message::SemicolonForColon:
+    case Message::NumeroSign:
+    case Message::ForeignLetter:
         return 102;
     case Message::MixedScripts:
         return 103;

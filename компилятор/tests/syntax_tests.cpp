@@ -12,7 +12,7 @@ namespace
 
 using namespace splav;
 
-constexpr size_t EXPECTED_CORPUS_FILES = 682;
+constexpr size_t EXPECTED_CORPUS_FILES = 684;
 constexpr size_t EXPECTED_REJECTED_FILES = 24;
 
 std::string firstDiagnostic(

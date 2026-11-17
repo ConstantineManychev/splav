@@ -34,6 +34,7 @@ bool isIdentifierLetter(char32_t codePoint);
 bool isIdentifierMark(char32_t codePoint);
 bool isIdentifierStart(char32_t codePoint);
 bool isIdentifierContinue(char32_t codePoint);
+bool isForeignLetter(char32_t codePoint);
 Script identifierScript(char32_t codePoint);
 bool isLowercase(char32_t codePoint);
 bool isUppercase(char32_t codePoint);
