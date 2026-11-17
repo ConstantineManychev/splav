@@ -14,11 +14,19 @@ namespace
 
 using namespace splav;
 
+using namespace std::literals;
+
 struct NormalizationVector
 {
     std::u32string_view source;
     std::u32string_view composed;
     std::u32string_view decomposed;
+};
+
+struct GraphemeVector
+{
+    std::u32string_view text;
+    std::string_view breaks;
 };
 
 #include "tests/unicode_vectors.inc"
@@ -150,6 +158,41 @@ SPLAV_TEST(normalizesSampledVectors, "юникод: NFC и NFD на выборк
     context.expectEqual(failures, size_t{0}, "число расхождений");
     context.expectEqual(
         unicode::encodeUtf8(unicode::toNfc(U"\x438\x306\x435\x308")), std::string("йё"), "и + кратка, е + трема");
+}
+
+SPLAV_TEST(segmentsGraphemes, "юникод: графемы по GraphemeBreakTest.txt")
+{
+    size_t failures = 0;
+    for (const GraphemeVector& vector : GRAPHEME_VECTORS)
+    {
+        const std::string text = unicode::encodeUtf8(vector.text);
+        std::vector<size_t> starts;
+        size_t offset = 0;
+        for (const char32_t codePoint : vector.text)
+        {
+            starts.push_back(offset);
+            offset += unicode::encodeUtf8(std::u32string_view(&codePoint, 1)).size();
+        }
+        std::string breaks(vector.text.size() - 1, '0');
+        for (size_t position = 0; position < text.size();)
+        {
+            position = unicode::graphemeEnd(text, position);
+            for (size_t index = 1; index < starts.size(); ++index)
+            {
+                if (starts[index] == position)
+                {
+                    breaks[index - 1] = '1';
+                }
+            }
+        }
+        if (breaks != vector.breaks && failures++ < 5)
+        {
+            context.fail("разбиение " + describe(vector.text) + ": получено " + breaks + ", ожидалось "
+                + std::string(vector.breaks));
+        }
+    }
+    context.expectEqual(failures, size_t{0}, "число расхождений");
+    context.expectEqual(std::size(GRAPHEME_VECTORS), size_t{766}, "число примеров");
 }
 
 SPLAV_TEST(normalizesWholeConformanceFile, "юникод: NormalizationTest.txt целиком")

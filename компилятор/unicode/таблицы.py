@@ -25,6 +25,18 @@ import urllib.request
         "security/{версия}/confusables.txt",
         "091c7f82fc39ef208faf8f94d29c244de99254675e09de163160c810d13ef22a",
     ),
+    "GraphemeBreakProperty.txt": (
+        "ucd/{версия}/auxiliary/GraphemeBreakProperty.txt",
+        "d6b51d1d2ae5c33b451b7ed994b48f1f4dc62b2272a5831e7fd418514a6bae89",
+    ),
+    "GraphemeBreakTest.txt": (
+        "ucd/{версия}/auxiliary/GraphemeBreakTest.txt",
+        "e2d134d2c52919bace503ebb6a551c1855fe1a1faec18478c78fff254a1793ec",
+    ),
+    "emoji-data.txt": (
+        "ucd/{версия}/emoji/emoji-data.txt",
+        "2cb2bb9455cda83e8481541ecf5b6dfda66a3bb89efa3fa7c5297eccf607b72b",
+    ),
 }
 
 КОРЕНЬ = pathlib.Path(__file__).resolve().parent.parent.parent
@@ -46,6 +58,19 @@ import urllib.request
     ДРУГАЯ: "OTHER", СТРОЧНАЯ: "LOWER", ЗАГЛАВНАЯ: "UPPER",
 }
 ПОСЛЕДНЯЯ_ТОЧКА = 0x10FFFF
+КЛАССЫ_ГРАФЕМ = {
+    "CR": "CR", "LF": "LF", "Control": "Control", "Extend": "Extend", "ZWJ": "ZWJ",
+    "Regional_Indicator": "RegionalIndicator", "Prepend": "Prepend", "SpacingMark": "SpacingMark",
+    "L": "L", "V": "V", "T": "T", "LV": "LV", "LVT": "LVT",
+}
+ПИКТОГРАММА = 1
+СОГЛАСНАЯ = 2
+ПРОДОЛЖЕНИЕ = 4
+СВЯЗКА = 8
+ИМЕНА_ПРИЗНАКОВ_ГРАФЕМ = {
+    ПИКТОГРАММА: "PICTOGRAPHIC", СОГЛАСНАЯ: "CONJUNCT_CONSONANT", ПРОДОЛЖЕНИЕ: "CONJUNCT_EXTEND", СВЯЗКА: "CONJUNCT_LINKER",
+}
+ПРИЗНАКИ_СВЯЗКИ = {"Consonant": СОГЛАСНАЯ, "Extend": ПРОДОЛЖЕНИЕ, "Linker": СВЯЗКА}
 
 
 def сумма(данные):
@@ -170,6 +195,28 @@ def таблица_смешения(текст):
     return sorted(записи), цели
 
 
+def таблица_графем(разрывы, эмодзи, ядро):
+    классы = {}
+    for поля in строки_данных(разрывы):
+        начало, конец = диапазон(поля[0])
+        for точка in range(начало, конец + 1):
+            классы[точка] = КЛАССЫ_ГРАФЕМ[поля[1]]
+    признаки = {}
+    for точка in свойства(эмодзи, ["Extended_Pictographic"])["Extended_Pictographic"]:
+        признаки[точка] = ПИКТОГРАММА
+    for поля in строки_данных(ядро):
+        if len(поля) >= 3 and поля[1] == "InCB":
+            начало, конец = диапазон(поля[0])
+            for точка in range(начало, конец + 1):
+                признаки[точка] = признаки.get(точка, 0) | ПРИЗНАКИ_СВЯЗКИ[поля[2]]
+    точки = set(классы) | set(признаки)
+    return сжать(точки, lambda точка: (классы.get(точка, "Other"), признаки.get(точка, 0)))
+
+
+def имя_признаков(значение):
+    return " | ".join(имя for бит, имя in ИМЕНА_ПРИЗНАКОВ_ГРАФЕМ.items() if значение & бит) or "0"
+
+
 def шестнадцатеричное(точка):
     return f"0x{точка:04X}"
 
@@ -190,7 +237,7 @@ def фигурные(*значения):
     return "{" + ", ".join(значения) + "}"
 
 
-def текст_cpp(имена, классы, разложения, сочетания, игнорируемые, смешение, цели):
+def текст_cpp(имена, классы, разложения, сочетания, игнорируемые, смешение, цели, графемы):
     части = [
         f'constexpr std::string_view UNICODE_VERSION = "{ВЕРСИЯ}";',
         массив(
@@ -227,6 +274,14 @@ def текст_cpp(имена, классы, разложения, сочета�
             6,
         ),
         массив("char32_t CONFUSABLE_TARGETS[]", [шестнадцатеричное(точка) for точка in цели], 12),
+        массив(
+            "GraphemeRange GRAPHEME_RANGES[]",
+            [
+                фигурные(шестнадцатеричное(а), шестнадцатеричное(б), f"GraphemeBreak::{класс}", имя_признаков(признаки))
+                for а, б, (класс, признаки) in графемы
+            ],
+            1,
+        ),
     ]
     return "\n\n".join(части) + "\n"
 
@@ -253,9 +308,27 @@ def примеры_нормализации(текст, имена):
     return итог
 
 
-def текст_примеров(примеры):
+def примеры_графем(текст):
+    итог = []
+    for строка in текст.splitlines():
+        содержимое = строка.split("#", 1)[0].split()
+        if not содержимое:
+            continue
+        точки = [int(часть, 16) for часть in содержимое[1::2]]
+        разрывы = "".join("1" if знак == "÷" else "0" for знак in содержимое[2:-1:2])
+        итог.append((точки, разрывы))
+    return итог
+
+
+def текст_примеров(примеры, графемы):
     записи = [фигурные(литерал(а), литерал(б), литерал(в)) for а, б, в in примеры]
-    return массив("NormalizationVector NORMALIZATION_VECTORS[]", записи, 1) + "\n"
+    разбиения = [фигурные(литерал(точки) + "sv", f'"{разрывы}"') for точки, разрывы in графемы]
+    return (
+        массив("NormalizationVector NORMALIZATION_VECTORS[]", записи, 1)
+        + "\n\n"
+        + массив("GraphemeVector GRAPHEME_VECTORS[]", разбиения, 1)
+        + "\n"
+    )
 
 
 def текст_python(имена):
@@ -310,11 +383,17 @@ def главная():
     имена = таблица_имён(категории, ядро, письменности)
     сочетания = таблица_сочетаний(разложения, исключения["Full_Composition_Exclusion"])
     смешение, цели = таблица_смешения(тексты["confusables.txt"])
+    графемы = таблица_графем(
+        тексты["GraphemeBreakProperty.txt"], тексты["emoji-data.txt"], тексты["DerivedCoreProperties.txt"],
+    )
     результаты = {
         ТАБЛИЦЫ_CPP: текст_cpp(
-            имена, классы, разложения, сочетания, ядро["Default_Ignorable_Code_Point"], смешение, цели,
+            имена, классы, разложения, сочетания, ядро["Default_Ignorable_Code_Point"], смешение, цели, графемы,
         ),
-        ПРИМЕРЫ_CPP: текст_примеров(примеры_нормализации(тексты["NormalizationTest.txt"], имена)),
+        ПРИМЕРЫ_CPP: текст_примеров(
+            примеры_нормализации(тексты["NormalizationTest.txt"], имена),
+            примеры_графем(тексты["GraphemeBreakTest.txt"]),
+        ),
         ТАБЛИЦЫ_PYTHON: текст_python(имена),
     }
     расхождения = 0

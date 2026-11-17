@@ -23,6 +23,7 @@ struct TestOutcome
 {
     std::string name;
     bool passed = false;
+    bool skipped = false;
     std::string message;
 };
 

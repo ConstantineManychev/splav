@@ -305,8 +305,7 @@ Cell stringFromUtf8(Call& call)
             {
                 return call.machine.failure(call.machine.enumValue(errorType, "ОборванаПоследовательность", {}));
             }
-            return call.machine.failure(
-                call.machine.enumValue(errorType, "НеверныйБайт", {sizeCell(position)}));
+            return call.machine.failure(call.machine.enumValue(errorType, "НеверныйБайт", {sizeCell(position)}));
         }
         position += decoded.length;
     }
@@ -572,7 +571,8 @@ Cell expectBitwise(Call& call)
         {
             return call.machine.success(nullptr);
         }
-        return testFailure(call, "ожидалось побитное совпадение: " + floatText(left.floating, left.number) + " и "
+        return testFailure(call,
+            "ожидалось побитное совпадение: " + floatText(left.floating, left.number) + " и "
                 + floatText(right.floating, right.number));
     }
     return expectEqual(call);
@@ -587,8 +587,9 @@ Cell expectClose(Call& call)
     {
         return call.machine.success(nullptr);
     }
-    return testFailure(call, "ожидалась близость: " + floatText(left, Number::F64) + " и "
-            + floatText(right, Number::F64) + " с допуском " + floatText(tolerance, Number::F64));
+    return testFailure(call,
+        "ожидалась близость: " + floatText(left, Number::F64) + " и " + floatText(right, Number::F64) + " с допуском "
+            + floatText(tolerance, Number::F64));
 }
 
 Cell expectSuccess(Call& call)
@@ -599,7 +600,8 @@ Cell expectSuccess(Call& call)
         return call.machine.success(result.items.empty() ? voidCell() : result.items.front());
     }
     return testFailure(call,
-        "ожидался успех, а получена ошибка " + (result.items.empty() ? "" : call.machine.describe(result.items.front())));
+        "ожидался успех, а получена ошибка "
+            + (result.items.empty() ? "" : call.machine.describe(result.items.front())));
 }
 
 Cell expectFailure(Call& call)
@@ -614,8 +616,9 @@ Cell expectFailure(Call& call)
 
 Cell testSkip(Call& call)
 {
-    return call.machine.structValue(
-        call.machine.failureType, {stringCell("пропуск: " + std::string(textView(call.argument(0))))});
+    Cell reason = stringCell(std::string(textView(call.argument(0))));
+    call.machine.skipReasons.insert(reason->text.get());
+    return call.machine.structValue(call.machine.failureType, {std::move(reason)});
 }
 
 Cell regionAllocate(Call& call)
@@ -646,8 +649,7 @@ Cell regionTryAllocate(Call& call)
 
 Cell arenaValue(Call& call, size_t capacity)
 {
-    return call.machine.structValue(
-        call.machine.arenaType, {voidCell(), sizeCell(capacity), sizeCell(0)});
+    return call.machine.structValue(call.machine.arenaType, {voidCell(), sizeCell(capacity), sizeCell(0)});
 }
 
 Cell arenaNew(Call& call)
@@ -690,8 +692,8 @@ Cell fileOpened(Call& call, const char* mode)
     }
     const int32_t descriptor = call.machine.nextDescriptor++;
     call.machine.files[descriptor] = file;
-    return call.machine.success(call.machine.structValue(
-        call.machine.fileType, {integerCell(signedInteger(descriptor), Number::I32)}));
+    return call.machine.success(
+        call.machine.structValue(call.machine.fileType, {integerCell(signedInteger(descriptor), Number::I32)}));
 }
 
 std::FILE* fileOf(Call& call)
@@ -733,7 +735,8 @@ Cell fileRead(Call& call)
     }
     for (size_t index = 0; index < read; ++index)
     {
-        *listElement(*buffer, index) = *integerCell(unsignedInteger(static_cast<unsigned char>(bytes[index])), Number::U8);
+        *listElement(*buffer, index) =
+            *integerCell(unsignedInteger(static_cast<unsigned char>(bytes[index])), Number::U8);
     }
     return call.machine.success(sizeCell(read));
 }
@@ -822,9 +825,9 @@ Cell mathFusedMultiplyAdd(Call& call)
     const Number number = floatNumberOf(first);
     if (number == Number::F32)
     {
-        const float result = std::fma(static_cast<float>(first.floating),
-            static_cast<float>(floatOf(call, call.argument(base + 1))),
-            static_cast<float>(floatOf(call, call.argument(base + 2))));
+        const float result =
+            std::fma(static_cast<float>(first.floating), static_cast<float>(floatOf(call, call.argument(base + 1))),
+                static_cast<float>(floatOf(call, call.argument(base + 2))));
         return floatCell(result, number);
     }
     return floatCell(

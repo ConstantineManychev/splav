@@ -9,6 +9,7 @@
 #include <functional>
 #include <map>
 #include <optional>
+#include <set>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -136,6 +137,7 @@ public:
     const TypeDecl* regionType = nullptr;
     const TypeDecl* arenaType = nullptr;
     std::map<int32_t, std::FILE*> files;
+    std::set<const std::string*> skipReasons;
     int32_t nextDescriptor = 3;
 
 private:
@@ -183,7 +185,8 @@ private:
     Cell field(const SyntaxNodeView& node);
     Cell member(const Cell& receiver, const std::string& key, std::string_view display);
     Cell call(const SyntaxNodeView& node);
-    Cell callMethod(const Cell& receiver, const std::string& key, std::string_view display, std::vector<Cell> arguments);
+    Cell callMethod(
+        const Cell& receiver, const std::string& key, std::string_view display, std::vector<Cell> arguments);
     Cell nativeMethod(const Cell& receiver, const std::string& key, std::vector<Cell>& arguments, bool& handled);
     Cell construct(const TypeDecl* decl, uint32_t variant, std::vector<Cell> arguments);
     Cell index(const SyntaxNodeView& node);

@@ -766,8 +766,7 @@ const FunctionInfo* Machine::methodFor(const Value& value, const std::string& ke
     case ValueKind::Integer:
         return declarations.method(nullptr, std::string(numberName(value.number)), key);
     case ValueKind::Float:
-        return declarations.method(
-            nullptr, value.number == Number::F32 ? std::string("в32") : std::string("в64"), key);
+        return declarations.method(nullptr, value.number == Number::F32 ? std::string("в32") : std::string("в64"), key);
     case ValueKind::Char:
         return declarations.method(nullptr, "сим", key);
     case ValueKind::Str:
@@ -1091,8 +1090,8 @@ Flow Machine::exec(const SyntaxNodeView& statement)
                 eval(child);
             }
         }
-        const std::optional<SyntaxToken> name = statement.kind() == RegionStmt ? statement.token(Identifier)
-                                                                              : std::nullopt;
+        const std::optional<SyntaxToken> name =
+            statement.kind() == RegionStmt ? statement.token(Identifier) : std::nullopt;
         if (!name)
         {
             return execBlock(block);
@@ -1223,8 +1222,7 @@ void Machine::destructure(const SyntaxNodeView& target, const Cell& input)
         const std::vector<SyntaxNodeView> parts = target.nodes();
         const SyntaxNodeView arguments = target.node(ArgList);
         const std::vector<SyntaxNodeView> elements = arguments ? arguments.nodes() : std::vector<SyntaxNodeView>();
-        const std::optional<SyntaxToken> head =
-            parts.empty() ? std::nullopt : parts.front().token(Identifier);
+        const std::optional<SyntaxToken> head = parts.empty() ? std::nullopt : parts.front().token(Identifier);
         const std::string key = head ? keyOf(*head) : std::string();
         bool matches = false;
         if (value->kind == ValueKind::Optional)
@@ -1510,9 +1508,7 @@ void Machine::forEachElement(const Cell& input, const std::function<bool(const C
     {
         size_t number = 0;
         forEachElement(source->target, [&](const Cell& element)
-        {
-            return visitor(tupleCell({integerCell(unsignedInteger(number++), Number::Size), element}));
-        });
+        { return visitor(tupleCell({integerCell(unsignedInteger(number++), Number::Size), element})); });
         return;
     }
     case ValueKind::Struct:
@@ -1672,8 +1668,8 @@ bool Machine::matchPath(const SyntaxNodeView& pattern, const Cell& value, bool v
             }
             const std::string fieldKey = keyOf(*name);
             const auto& declared = value->decl->fields;
-            const auto found = std::find_if(
-                declared.begin(), declared.end(), [&](const FieldDecl& candidate) { return candidate.key == fieldKey; });
+            const auto found = std::find_if(declared.begin(), declared.end(),
+                [&](const FieldDecl& candidate) { return candidate.key == fieldKey; });
             if (found == declared.end())
             {
                 return false;
@@ -1968,8 +1964,8 @@ Cell Machine::literalToken(const SyntaxToken& token)
     {
         const size_t quote = token.text.find('\'');
         const std::string decoded = decodeEscapes(token.text.substr(quote + 1, token.text.size() - quote - 2));
-        value = integerCell(unsignedInteger(static_cast<unsigned char>(decoded.empty() ? 0 : decoded.front())),
-            Number::U8);
+        value =
+            integerCell(unsignedInteger(static_cast<unsigned char>(decoded.empty() ? 0 : decoded.front())), Number::U8);
         break;
     }
     case String:
@@ -2129,8 +2125,7 @@ Cell Machine::member(const Cell& receiver, const std::string& key, std::string_v
         }
         break;
     case ValueKind::Vector:
-        for (size_t component = 0; component < VECTOR_COMPONENTS.size() && component < value->items.size();
-             ++component)
+        for (size_t component = 0; component < VECTOR_COMPONENTS.size() && component < value->items.size(); ++component)
         {
             if (key == VECTOR_COMPONENTS[component])
             {
@@ -2356,8 +2351,8 @@ Cell Machine::index(const SyntaxNodeView& node)
     {
         return listElement(*receiver, offset);
     }
-    return integerCell(unsignedInteger(static_cast<unsigned char>((*receiver->text)[receiver->start + offset])),
-        Number::U8);
+    return integerCell(
+        unsignedInteger(static_cast<unsigned char>((*receiver->text)[receiver->start + offset])), Number::U8);
 }
 
 std::pair<size_t, size_t> Machine::sliceBounds(const Value& bounds, size_t length) const
@@ -2952,13 +2947,13 @@ Cell Machine::compound(const SyntaxNodeView& node)
                     continue;
                 }
                 Cell item = consume(eval(values.front()));
-                if (item->number == Number::Untyped && (item->kind == ValueKind::Float || item->kind == ValueKind::Integer))
+                if (item->number == Number::Untyped
+                    && (item->kind == ValueKind::Float || item->kind == ValueKind::Integer))
                 {
-                    item = isFloatNumber(alias->number) ? floatCell(item->kind == ValueKind::Float
-                                                                  ? item->floating
-                                                                  : integerToDouble(item->integer),
-                                                              alias->number)
-                                                        : integerCell(item->integer, alias->number);
+                    item = isFloatNumber(alias->number)
+                        ? floatCell(item->kind == ValueKind::Float ? item->floating : integerToDouble(item->integer),
+                              alias->number)
+                        : integerCell(item->integer, alias->number);
                 }
                 vector.items.push_back(std::move(item));
             }
@@ -2980,8 +2975,8 @@ Cell Machine::compound(const SyntaxNodeView& node)
     const auto& fields = decl->fields;
     const auto fieldIndex = [&](const std::string& key)
     {
-        const auto found =
-            std::find_if(fields.begin(), fields.end(), [&](const FieldDecl& candidate) { return candidate.key == key; });
+        const auto found = std::find_if(
+            fields.begin(), fields.end(), [&](const FieldDecl& candidate) { return candidate.key == key; });
         return found == fields.end() ? std::optional<size_t>() : std::optional<size_t>(found - fields.begin());
     };
     std::vector<Cell> items(fields.size());
@@ -3410,9 +3405,10 @@ std::vector<TestOutcome> Machine::runTests()
             {
                 outcome.passed = false;
                 const Cell& error = dereference(result->items.front());
-                outcome.message = error->kind == ValueKind::Struct && error->decl == failureType
-                    ? std::string(textView(*dereference(error->items.front())))
-                    : show(error);
+                const bool failed = error->kind == ValueKind::Struct && error->decl == failureType;
+                const Value* message = failed ? dereference(error->items.front()).get() : nullptr;
+                outcome.message = message != nullptr ? std::string(textView(*message)) : show(error);
+                outcome.skipped = message != nullptr && skipReasons.contains(message->text.get());
             }
         }
         catch (const Panic& failure)

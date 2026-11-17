@@ -62,6 +62,40 @@ struct Confusable
     uint32_t length;
 };
 
+enum class GraphemeBreak : uint8_t
+{
+    Other,
+    CR,
+    LF,
+    Control,
+    Extend,
+    ZWJ,
+    RegionalIndicator,
+    Prepend,
+    SpacingMark,
+    L,
+    V,
+    T,
+    LV,
+    LVT,
+};
+
+enum GraphemeFlag : uint8_t
+{
+    PICTOGRAPHIC = 1,
+    CONJUNCT_CONSONANT = 2,
+    CONJUNCT_EXTEND = 4,
+    CONJUNCT_LINKER = 8,
+};
+
+struct GraphemeRange
+{
+    char32_t first;
+    char32_t last;
+    GraphemeBreak kind;
+    uint8_t flags;
+};
+
 #include "unicode/tables.inc"
 
 constexpr char32_t HANGUL_SYLLABLE_BASE = 0xAC00;
@@ -420,6 +454,94 @@ std::u32string skeleton(std::u32string_view text)
     return toNfd(mapped);
 }
 
+namespace
+{
+
+struct GraphemeState
+{
+    bool pictographic = false;
+    bool joinedPictographic = false;
+    size_t regionalRun = 0;
+    bool conjunct = false;
+    bool conjunctLinked = false;
+};
+
+GraphemeRange graphemeProperties(char32_t codePoint)
+{
+    if (const GraphemeRange* range = findRange(GRAPHEME_RANGES, codePoint))
+    {
+        return *range;
+    }
+    return GraphemeRange{codePoint, codePoint, GraphemeBreak::Other, 0};
+}
+
+bool isControlBreak(GraphemeBreak kind)
+{
+    return kind == GraphemeBreak::Control || kind == GraphemeBreak::CR || kind == GraphemeBreak::LF;
+}
+
+bool joins(const GraphemeRange& previous, const GraphemeRange& current, const GraphemeState& state)
+{
+    using enum GraphemeBreak;
+    if (previous.kind == CR && current.kind == LF)
+    {
+        return true;
+    }
+    if (isControlBreak(previous.kind) || isControlBreak(current.kind))
+    {
+        return false;
+    }
+    if (previous.kind == L && (current.kind == L || current.kind == V || current.kind == LV || current.kind == LVT))
+    {
+        return true;
+    }
+    if ((previous.kind == LV || previous.kind == V) && (current.kind == V || current.kind == T))
+    {
+        return true;
+    }
+    if ((previous.kind == LVT || previous.kind == T) && current.kind == T)
+    {
+        return true;
+    }
+    if (current.kind == Extend || current.kind == ZWJ || current.kind == SpacingMark || previous.kind == Prepend)
+    {
+        return true;
+    }
+    if ((current.flags & CONJUNCT_CONSONANT) != 0 && state.conjunct && state.conjunctLinked)
+    {
+        return true;
+    }
+    if (previous.kind == ZWJ && (current.flags & PICTOGRAPHIC) != 0 && state.joinedPictographic)
+    {
+        return true;
+    }
+    return previous.kind == RegionalIndicator && current.kind == RegionalIndicator && state.regionalRun % 2 == 1;
+}
+
+void advance(GraphemeState& state, const GraphemeRange& current)
+{
+    const bool extendsPictograph = current.kind == GraphemeBreak::Extend && state.pictographic;
+    state.joinedPictographic = current.kind == GraphemeBreak::ZWJ && state.pictographic;
+    state.pictographic = (current.flags & PICTOGRAPHIC) != 0 || extendsPictograph;
+    state.regionalRun = current.kind == GraphemeBreak::RegionalIndicator ? state.regionalRun + 1 : 0;
+    if ((current.flags & CONJUNCT_CONSONANT) != 0)
+    {
+        state.conjunct = true;
+        state.conjunctLinked = false;
+    }
+    else if (state.conjunct && (current.flags & (CONJUNCT_EXTEND | CONJUNCT_LINKER)) != 0)
+    {
+        state.conjunctLinked = state.conjunctLinked || (current.flags & CONJUNCT_LINKER) != 0;
+    }
+    else
+    {
+        state.conjunct = false;
+        state.conjunctLinked = false;
+    }
+}
+
+}
+
 size_t graphemeEnd(std::string_view text, size_t offset)
 {
     if (offset >= text.size())
@@ -427,20 +549,21 @@ size_t graphemeEnd(std::string_view text, size_t offset)
         return text.size();
     }
     const Decoded first = decodeUtf8(text, offset);
-    size_t position = offset + first.length;
-    if (first.codePoint == U'\r' && position < text.size() && text[position] == '\n')
-    {
-        return position + 1;
-    }
+    GraphemeRange previous = graphemeProperties(first.codePoint);
+    GraphemeState state;
+    advance(state, previous);
+    size_t position = offset + std::max<size_t>(1, first.length);
     while (position < text.size())
     {
         const Decoded next = decodeUtf8(text, position);
-        if (isIdentifierMark(next.codePoint) || next.codePoint == U'\u200D')
+        const GraphemeRange current = graphemeProperties(next.codePoint);
+        if (!joins(previous, current, state))
         {
-            position += next.length;
-            continue;
+            break;
         }
-        break;
+        advance(state, current);
+        previous = current;
+        position += std::max<size_t>(1, next.length);
     }
     return position;
 }

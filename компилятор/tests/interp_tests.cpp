@@ -26,9 +26,7 @@ RunOptions capturing(Execution& execution, std::vector<std::string> arguments)
     RunOptions options;
     options.arguments = std::move(arguments);
     options.write = [&execution](bool error, std::string_view text)
-    {
-        (error ? execution.errors : execution.output) += text;
-    };
+    { (error ? execution.errors : execution.output) += text; };
     return options;
 }
 
@@ -113,8 +111,8 @@ SPLAV_TEST(overflowTraps, "интерпретатор: переполнение 
 }
 )");
     context.expectEqual(execution.code, PANIC_EXIT_CODE, "код выхода");
-    context.expectEqual(execution.errors, std::string("паника: переполнение `н8`: 255 + 1\n  в проба:6:14\n"),
-        "сообщение паники");
+    context.expectEqual(
+        execution.errors, std::string("паника: переполнение `н8`: 255 + 1\n  в проба:6:14\n"), "сообщение паники");
 }
 
 SPLAV_TEST(wrappingAndChecked, "интерпретатор: заворачивание и проверяемая арифметика")
@@ -132,6 +130,101 @@ SPLAV_TEST(wrappingAndChecked, "интерпретатор: заворачива
 }
 )");
     context.expectEqual(execution.output, std::string("4 да -50\n"), "вывод");
+}
+
+SPLAV_TEST(controlFlowAndPatterns, "интерпретатор: метки, `отложить`, образцы и `?Т`")
+{
+    const Execution execution = runSource(context, R"(подключить ядро.консоль
+подключить ядро.ос
+подключить ядро.текст
+
+структ Точка
+{
+    х: ц32
+    у: ц32
+}
+
+переч Фигура
+{
+    Круг(радиус: ц32)
+    Отрезок(Точка, Точка)
+    Пусто
+}
+
+функ Фигура.вид(&сам) требует Регион -> стр
+{
+    возврат выбор сам
+    {
+        Круг(р) если р > 10       => "большой круг"
+        Круг(_)                   => "круг"
+        Отрезок(а, Точка{ х, у }) => текст.формат("отрезок до {},{} от {}", х, у, а.х)
+        Пусто                     => "пусто"
+    }
+}
+
+функ половина(число: ц32) -> ?ц32
+{
+    если число % 2 != 0
+    {
+        возврат Ничего
+    }
+    возврат число / 2
+}
+
+функ четверть(число: ц32) -> ?ц32
+{
+    половинка = попытка половина(число)
+    возврат половина(половинка)
+}
+
+функ сдвинуть(точка: &изм Точка)
+{
+    точка.х += 1
+}
+
+функ вход() -> Итог(пусто, ос.ОшибкаВвода)
+{
+    изм найдено: ц32 = 0
+    внешний: цикл а в 0..10
+    {
+        цикл б в 0..10
+        {
+            если б > а
+            {
+                продолжить внешний
+            }
+            если а * б == 12
+            {
+                найдено = а * 10 + б
+                прервать внешний
+            }
+        }
+    }
+    изм точка = Точка{ х: 1, у: 2 }
+    сдвинуть(&изм точка)
+    (левое, правое) = (точка.х, точка.у)
+    регион
+    {
+        попытка консоль.печать(найдено, " ", левое, правое)
+        попытка консоль.печать(Круг(3).вид(), "; ", Круг(30).вид(), "; ", Отрезок(Точка{ х: 0, у: 0 }, точка).вид())
+        попытка консоль.печать(четверть(12) это Есть(3), " ", четверть(6) это Ничего)
+        строка = "е\u{301}ж👨‍👩‍👧!"
+        попытка консоль.печать(строка.графемы().количество(), " ", строка.срез(0..4))
+        цикл символ в 'а'..='в'
+        {
+            отложить консоль.печать("после ", символ)
+            попытка консоль.печать("до ", символ)
+        }
+    }
+    возврат Успех()
+}
+)");
+    context.expectEqual(execution.code, 0, "код выхода");
+    context.expectEqual(execution.errors, std::string(), "ошибки");
+    context.expectEqual(execution.output,
+        std::string("43 22\nкруг; большой круг; отрезок до 2,2 от 0\nда да\n4 е́\n"
+                    "до а\nпосле а\nдо б\nпосле б\nдо в\nпосле в\n"),
+        "вывод");
 }
 
 SPLAV_TEST(errorEntryExitsWithOne, "интерпретатор: `Ошибка` из `вход` — код 1 без вывода")
@@ -155,11 +248,13 @@ SPLAV_TEST(jsonCorpusRuns, "интерпретатор: корпус json про
     const std::filesystem::path document =
         std::filesystem::temp_directory_path() / pathFromUtf8("сплав-проба-json.json");
     writeFile(document, R"({"имя": "Сплав", "версии": [1, 2.5, -0.5], "вложено": {"а": null, "б": true}})");
-    const Execution valid = runPackage(context, context.root(), "корпус/json", {"проверить-json", utf8FromPath(document)});
+    const Execution valid =
+        runPackage(context, context.root(), "корпус/json", {"проверить-json", utf8FromPath(document)});
     context.expectEqual(valid.code, 0, "код выхода для корректного документа");
     context.expectEqual(valid.output, std::string("корректный JSON, значений: 9\n"), "вывод");
     writeFile(document, "{\n  \"ключ\": [1, 2,,]\n}");
-    const Execution broken = runPackage(context, context.root(), "корпус/json", {"проверить-json", utf8FromPath(document)});
+    const Execution broken =
+        runPackage(context, context.root(), "корпус/json", {"проверить-json", utf8FromPath(document)});
     context.expectEqual(broken.code, FAILURE_EXIT_CODE, "код выхода для испорченного документа");
     context.expectEqual(broken.errors, std::string("2:17: неожиданный символ\n"), "сообщение");
     std::filesystem::remove(document);

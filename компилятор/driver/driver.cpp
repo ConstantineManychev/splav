@@ -414,9 +414,13 @@ int testFilesCommand(Arguments arguments)
             std::string report = utf8FromPath(file) + "\n";
             for (const TestOutcome& outcome : outcomes)
             {
-                report += (outcome.passed ? "  ✓ " : "  ✗ ") + outcome.name
-                    + (outcome.passed ? std::string() : ": " + outcome.message) + "\n";
-                passed += outcome.passed ? 1 : 0;
+                const std::string_view mark = outcome.passed ? "  ✓ " : outcome.skipped ? "  – " : "  ✗ ";
+                report += std::string(mark) + outcome.name
+                    + (outcome.passed         ? std::string()
+                            : outcome.skipped ? ": пропущено, " + outcome.message
+                                              : ": " + outcome.message)
+                    + "\n";
+                passed += outcome.passed || outcome.skipped ? 1 : 0;
             }
             total += outcomes.size();
             writeStandardOutput(report);
