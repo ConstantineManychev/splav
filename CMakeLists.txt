@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.25)
 
 project(splav LANGUAGES CXX)
 
-set(SPLAV_VERSION "0.050.13")
+set(SPLAV_VERSION "0.180")
 
 option(SPLAV_WERROR "Считать предупреждения ошибками" OFF)
 option(SPLAV_BUILD_TESTS "Собирать тесты" ON)

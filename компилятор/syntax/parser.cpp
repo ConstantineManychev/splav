@@ -196,6 +196,31 @@ public:
     }
 
 private:
+    class LineScope
+    {
+    public:
+        explicit LineScope(Parser& owner) : parser(owner), saved(owner.freeBreaks)
+        {
+            parser.freeBreaks = false;
+        }
+
+        ~LineScope()
+        {
+            parser.freeBreaks = saved;
+            if (saved)
+            {
+                parser.skipEnds();
+            }
+        }
+
+        LineScope(const LineScope&) = delete;
+        LineScope& operator=(const LineScope&) = delete;
+
+    private:
+        Parser& parser;
+        bool saved;
+    };
+
     class DepthScope
     {
     public:
@@ -227,6 +252,8 @@ private:
     int depth = 0;
     bool failed = false;
     bool inType = false;
+    bool freeBreaks = false;
+    SyntaxKind lastKind = EndOfFile;
 
     SyntaxKind kind(size_t ahead = 0) const
     {
@@ -234,7 +261,16 @@ private:
         {
             return EndOfFile;
         }
-        return tokens[std::min(position + ahead, tokens.size() - 1)].kind;
+        size_t probe = position;
+        for (size_t step = 0; step < ahead; ++step)
+        {
+            probe = std::min(probe + 1, tokens.size() - 1);
+            while (freeBreaks && tokens[probe].kind == StatementEnd)
+            {
+                ++probe;
+            }
+        }
+        return tokens[probe].kind;
     }
 
     bool at(SyntaxKind expected) const
@@ -352,7 +388,12 @@ private:
         {
             ++rawCursor;
         }
+        lastKind = token.kind;
         ++position;
+        if (freeBreaks)
+        {
+            skipEnds();
+        }
     }
 
     bool accept(SyntaxKind expected)
@@ -392,9 +433,19 @@ private:
 
     void skipEnds()
     {
-        while (kind() == StatementEnd)
+        while (!failed && tokens[position].kind == StatementEnd)
         {
             ++position;
+        }
+    }
+
+    void parseHeader(SyntaxKind keyword, ExpressionFlags flags = HEADER)
+    {
+        parseExpression(flags);
+        const bool field = kind(1) == Identifier && kind(2) == Colon && kind(3) != KwLoop;
+        if (at(LBrace) && isOneOf(lastKind, {Identifier, RParen, RBracket}) && (field || kind(2) == Comma))
+        {
+            fail(Message::LiteralInHeader, keyword);
         }
     }
 
@@ -660,6 +711,7 @@ private:
             fail(Message::ExpectedBlock);
             return;
         }
+        const LineScope lines(*this);
         start(FieldList);
         bump();
         skipEnds();
@@ -686,6 +738,7 @@ private:
             fail(Message::ExpectedBlock);
             return;
         }
+        const LineScope lines(*this);
         start(VariantList);
         bump();
         skipEnds();
@@ -859,6 +912,7 @@ private:
 
     void parseBlock()
     {
+        const LineScope lines(*this);
         const DepthScope scope(*this);
         deepen();
         start(Block);
@@ -940,7 +994,7 @@ private:
             bump();
             if (accept(Identifier) && accept(KwOn))
             {
-                parseExpression(HEADER);
+                parseHeader(KwRegion);
             }
             requireBlock();
             finish();
@@ -949,7 +1003,7 @@ private:
         {
             start(ThroughStmt);
             bump();
-            parseExpression(HEADER);
+            parseHeader(KwThrough);
             requireBlock();
             finish();
         }
@@ -1035,7 +1089,7 @@ private:
             bump();
         }
         expect(KwIf);
-        parseExpression(HEADER);
+        parseHeader(KwIf);
         requireBlock();
         if (accept(KwElse))
         {
@@ -1075,11 +1129,11 @@ private:
                 accept(KwMut);
                 parseLoopPattern();
                 expect(KwIn);
-                parseExpression(HEADER);
+                parseHeader(KwLoop);
             }
             else
             {
-                parseExpression(LOOP_CONDITION);
+                parseHeader(KwLoop, LOOP_CONDITION);
             }
         }
         requireBlock();
@@ -1548,6 +1602,8 @@ private:
     void parseLiteralBody()
     {
         expect(LBrace);
+        const bool saved = freeBreaks;
+        freeBreaks = true;
         skipEnds();
         while (until(RBrace))
         {
@@ -1559,13 +1615,12 @@ private:
             }
             parseExpression();
             finish();
-            if (!accept(Comma) && !at(StatementEnd))
+            if (!accept(Comma))
             {
                 break;
             }
-            skipEnds();
         }
-        skipEnds();
+        freeBreaks = saved;
         expect(RBrace);
     }
 
@@ -1744,9 +1799,10 @@ private:
     {
         const bool saved = inType;
         inType = false;
+        const LineScope lines(*this);
         start(MatchExpr);
         bump();
-        parseExpression(HEADER);
+        parseHeader(KwMatch);
         if (!blockAhead())
         {
             fail(Message::ExpectedBlock);
@@ -1893,6 +1949,8 @@ private:
         {
             start(PatternFieldList);
             bump();
+            const bool saved = freeBreaks;
+            freeBreaks = true;
             skipEnds();
             while (until(RBrace))
             {
@@ -1903,12 +1961,12 @@ private:
                     parsePattern(false);
                 }
                 finish();
-                if (!accept(Comma) && !at(StatementEnd))
+                if (!accept(Comma))
                 {
                     break;
                 }
-                skipEnds();
             }
+            freeBreaks = saved;
             expect(RBrace);
             finish();
         }

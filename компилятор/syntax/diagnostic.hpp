@@ -44,6 +44,10 @@ enum class Message : uint8_t
     KeywordAsName,
     OnlyComptimeParams,
     NestingTooDeep,
+    LiteralInHeader,
+    EscapedNameUnclosed,
+    EscapedNameEmpty,
+    EscapedNameSpace,
 };
 
 enum class Ending : uint8_t

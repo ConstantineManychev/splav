@@ -12,8 +12,8 @@ namespace
 
 using namespace splav;
 
-constexpr size_t EXPECTED_CORPUS_FILES = 680;
-constexpr size_t EXPECTED_REJECTED_FILES = 23;
+constexpr size_t EXPECTED_CORPUS_FILES = 682;
+constexpr size_t EXPECTED_REJECTED_FILES = 24;
 
 std::string firstDiagnostic(
     std::string_view source, ParseMode mode = ParseMode::Module, Language language = Language::Russian)

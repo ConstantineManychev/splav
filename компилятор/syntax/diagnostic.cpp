@@ -135,6 +135,15 @@ std::string russianMessage(const Diagnostic& diagnostic)
         return "перед `.` в имени метода стоят только `компил`-параметры типа";
     case Message::NestingTooDeep:
         return "слишком глубокая вложенность: больше " + std::to_string(MAX_NESTING) + " уровней";
+    case Message::LiteralInHeader:
+        return "литерал в заголовке `" + std::string(fixedText(diagnostic.token))
+            + "` пишут в скобках, иначе `{` открывает блок";
+    case Message::EscapedNameUnclosed:
+        return "экранированное имя не закрыто до конца строки";
+    case Message::EscapedNameEmpty:
+        return "экранированное имя пусто";
+    case Message::EscapedNameSpace:
+        return "в экранированном имени нет пробелов и управляющих символов";
     }
     return {};
 }
@@ -198,6 +207,15 @@ std::string englishMessage(const Diagnostic& diagnostic)
         return "only `компил` parameters of the type may precede `.` in a method name";
     case Message::NestingTooDeep:
         return "nesting is too deep: more than " + std::to_string(MAX_NESTING) + " levels";
+    case Message::LiteralInHeader:
+        return "a literal in the header of `" + std::string(fixedText(diagnostic.token))
+            + "` goes in parentheses, otherwise `{` opens the block";
+    case Message::EscapedNameUnclosed:
+        return "escaped name is not closed before the end of the line";
+    case Message::EscapedNameEmpty:
+        return "escaped name is empty";
+    case Message::EscapedNameSpace:
+        return "an escaped name has no spaces or control characters";
     }
     return {};
 }
@@ -251,6 +269,12 @@ uint16_t codeOf(Message message)
         return 116;
     case Message::NestingTooDeep:
         return 117;
+    case Message::LiteralInHeader:
+        return 118;
+    case Message::EscapedNameUnclosed:
+    case Message::EscapedNameEmpty:
+    case Message::EscapedNameSpace:
+        return 119;
     }
     return 0;
 }

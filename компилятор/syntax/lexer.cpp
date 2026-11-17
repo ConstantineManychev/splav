@@ -63,6 +63,7 @@ constexpr std::array PUNCTUATION_BY_LENGTH = {
 
 constexpr std::string_view BYTE_PREFIX = "б'";
 constexpr std::string_view RAW_STRING_PREFIX = "\\\\";
+constexpr char ESCAPED_NAME_QUOTE = '`';
 constexpr char32_t LAST_ASCII = 0x7F;
 constexpr char32_t LAST_SCALAR = 0x10FFFF;
 constexpr char32_t FIRST_SURROGATE = 0xD800;
@@ -110,6 +111,13 @@ std::u32string decodeValid(std::string_view text)
         position += decoded.length;
     }
     return result;
+}
+
+bool isSpaceOrControl(char32_t codePoint)
+{
+    return codePoint <= 0x20 || (codePoint >= 0x7F && codePoint <= 0xA0) || codePoint == 0x1680
+        || (codePoint >= 0x2000 && codePoint <= 0x200A) || codePoint == 0x2028 || codePoint == 0x2029
+        || codePoint == 0x202F || codePoint == 0x205F || codePoint == 0x3000;
 }
 
 bool isScriptNeutral(unicode::Script script)
@@ -251,6 +259,10 @@ private:
         else if (startsWith(RAW_STRING_PREFIX, position))
         {
             scanRawString();
+        }
+        else if (symbol == ESCAPED_NAME_QUOTE)
+        {
+            scanEscapedName();
         }
         else if (startsWith(BYTE_PREFIX, position))
         {
@@ -620,6 +632,31 @@ private:
         diagnostic.common = ORDERED[common];
     }
 
+    void scanEscapedName()
+    {
+        size_t end = start + 1;
+        while (end < source.size() && source[end] != ESCAPED_NAME_QUOTE && source[end] != '\n')
+        {
+            ++end;
+        }
+        if (end >= source.size() || source[end] != ESCAPED_NAME_QUOTE)
+        {
+            report(Message::EscapedNameUnclosed, start, start + 1);
+            position = start + 1;
+            add(SyntaxKind::Error);
+            return;
+        }
+        position = end + 1;
+        const std::u32string name = unicode::toNfc(decodeValid(source.substr(start + 1, end - start - 1)));
+        if (name.empty() || std::any_of(name.begin(), name.end(), isSpaceOrControl))
+        {
+            report(name.empty() ? Message::EscapedNameEmpty : Message::EscapedNameSpace, start, position);
+            add(SyntaxKind::Error);
+            return;
+        }
+        add(SyntaxKind::Identifier);
+    }
+
     void scanName()
     {
         while (continuesName(position))
@@ -696,6 +733,10 @@ Lexed lex(std::string_view source)
 
 std::string normalizedName(std::string_view lexeme)
 {
+    if (lexeme.size() >= 2 && lexeme.front() == ESCAPED_NAME_QUOTE && lexeme.back() == ESCAPED_NAME_QUOTE)
+    {
+        lexeme = lexeme.substr(1, lexeme.size() - 2);
+    }
     return unicode::encodeUtf8(unicode::toNfc(decodeValid(lexeme)));
 }
 
