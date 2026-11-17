@@ -1,5 +1,6 @@
 #include "sema/names.hpp"
 
+#include "sema/declarations.hpp"
 #include "sema/naming.hpp"
 
 #include "sema/syntax_view.hpp"
@@ -11,6 +12,7 @@
 #include <deque>
 #include <functional>
 #include <map>
+#include <memory>
 #include <optional>
 #include <set>
 #include <string>
@@ -56,7 +58,6 @@ constexpr std::array BUILTIN_TYPES = {
 constexpr std::array BUILTIN_VALUES = {
     "Есть",
     "Ничего",
-    "компил_инфо",
     "чтение_волатил",
     "запись_волатил",
     "утвердить",
@@ -242,6 +243,11 @@ public:
         std::stable_sort(reports.begin(), reports.end(),
             [](const Report& left, const Report& right) { return left.offset < right.offset; });
         return std::move(reports);
+    }
+
+    void attach(const EvaluatorFactory& factory)
+    {
+        evaluators = factory;
     }
 
     std::vector<Respelling> spellings()
@@ -1068,8 +1074,49 @@ private:
         }
     }
 
+    bool referencesLocals(const SyntaxNodeView& node) const
+    {
+        if (node.kind() == NameExpr)
+        {
+            const std::optional<SyntaxToken> name = node.token(Identifier);
+            return node.hasToken(KwSelf) || (name && findLocal(nameKey(name->text), false) != nullptr);
+        }
+        for (const SyntaxNodeView& child : node.nodes())
+        {
+            if (referencesLocals(child))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::optional<bool> comptimeDecision(const SyntaxNodeView& node)
+    {
+        const SyntaxNodeView condition = node.child(0);
+        if (!node.hasToken(KwComptime) || !evaluators || !condition || referencesLocals(condition))
+        {
+            return std::nullopt;
+        }
+        if (!evaluator)
+        {
+            comptimeDeclarations = std::make_unique<Declarations>(program, module);
+            evaluator = evaluators(program, module, *comptimeDeclarations);
+        }
+        return evaluator ? evaluator->evaluateCondition(condition, module) : std::nullopt;
+    }
+
     void visitIf(const SyntaxNodeView& node)
     {
+        if (const std::optional<bool> decided = comptimeDecision(node))
+        {
+            visit(node.child(0));
+            if (const SyntaxNodeView chosen = *decided ? node.child(1) : node.child(2))
+            {
+                visit(chosen);
+            }
+            return;
+        }
         const std::vector<SyntaxNodeView> children = node.nodes();
         size_t index = 0;
         withScope([&]
@@ -1423,17 +1470,23 @@ private:
     std::map<std::string, SyntaxToken> constNames;
     std::map<std::string, std::vector<ConstEdge>> constEdges;
     std::vector<Respelling> respellings;
+    EvaluatorFactory evaluators;
+    std::unique_ptr<Declarations> comptimeDeclarations;
+    std::unique_ptr<ComptimeEvaluator> evaluator;
 };
 
 }
 
-std::vector<Report> resolveNames(Program& program, SourceModule& module, Language language)
+std::vector<Report> resolveNames(
+    Program& program, SourceModule& module, Language language, const EvaluatorFactory& evaluators)
 {
     if (module.kind != ModuleKind::Source || !module.root || !module.syntax.empty())
     {
         return {};
     }
-    return Resolver(program, module, language).run();
+    Resolver resolver(program, module, language);
+    resolver.attach(evaluators);
+    return resolver.run();
 }
 
 std::vector<Respelling> canonicalSpellings(Program& program, SourceModule& module)

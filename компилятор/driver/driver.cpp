@@ -146,7 +146,7 @@ bool reportNames(const Options& options, const std::string& path)
     {
         return true;
     }
-    std::vector<Report> reports = resolveNames(program, *module, options.language);
+    std::vector<Report> reports = resolveNames(program, *module, options.language, makeComptimeEvaluator);
     if (reports.empty())
     {
         reports = checkTypes(program, *module, options.language, makeComptimeEvaluator);
@@ -317,7 +317,7 @@ bool readyToRun(Program& program, const Options& options, Module& module, const 
     {
         return false;
     }
-    std::vector<Report> reports = resolveNames(program, module, options.language);
+    std::vector<Report> reports = resolveNames(program, module, options.language, makeComptimeEvaluator);
     if (reports.empty())
     {
         reports = checkTypes(program, module, options.language, makeComptimeEvaluator);

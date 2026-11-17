@@ -642,6 +642,15 @@ Cell compileTarget(Call& call)
             machine.enumValue(machine.findType("ядро.прелюдия", "Архитектура"), ARCHITECTURE, {})});
 }
 
+Cell compileInfo(Call& call)
+{
+    if (call.arguments.empty())
+    {
+        call.machine.panic("`компил_инфо` без типа");
+    }
+    return call.machine.typeInfo(call.arguments.back());
+}
+
 Cell uniqueNew(Call& call)
 {
     if (call.arguments.empty())
@@ -919,6 +928,7 @@ void registerBuiltins(std::unordered_map<std::string, Builtin>& table)
         {"ядро.тест.ожидатьОшибку", expectFailure},
         {"ядро.тест.пропуск", testSkip},
         {"ядро.прелюдия.компил_цель", compileTarget},
+        {"ядро.прелюдия.компил_инфо", compileInfo},
         {"Уник.новый", uniqueNew},
         {"Уник.освободить", uniqueRelease},
         {"Регион.выделить", regionAllocate},

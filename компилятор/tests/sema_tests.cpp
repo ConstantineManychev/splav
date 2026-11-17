@@ -35,7 +35,7 @@ std::string resolved(const std::filesystem::path& root, const std::filesystem::p
     {
         return "не читается";
     }
-    std::vector<Report> reports = resolveNames(program, *module, Language::Russian);
+    std::vector<Report> reports = resolveNames(program, *module, Language::Russian, makeComptimeEvaluator);
     if (reports.empty())
     {
         reports = checkTypes(program, *module, Language::Russian, makeComptimeEvaluator);
@@ -159,4 +159,55 @@ SPLAV_TEST(respellsYoToDeclaration, "имена: е и ё приводятся �
     context.expect(respelled.find("возврат счёт + ВСЁ") != std::string::npos, "параметр и константа");
     context.expect(respelled.find("    счетчик += ещё(1)") != std::string::npos, "привязка и функция");
     context.expect(respelled.find("`счетчик` += 1") != std::string::npos, "экранированное имя остаётся как написано");
+}
+
+SPLAV_TEST(skipsDeadComptimeBranch, "типы: неактивная ветвь `компил если` не проверяется")
+{
+    Program program(context.root(), context.root() / pathFromUtf8("библиотека"));
+    const std::string source = R"(подключить ядро.ос
+
+функ выбрать() -> ц32
+{
+    компил если 1 > 2
+    {
+        число: н8 = "не число"
+        _ = ос.несуществующая()
+        возврат число как ц32
+    }
+    иначе
+    {
+        возврат 1
+    }
+}
+
+функ всегда() -> ц32
+{
+    компил если 2 > 1
+    {
+        строка: стр = 5
+        _ = строка
+    }
+    возврат 0
+}
+
+функ обобщённая(компил Т: тип, значение: Т) -> ц32
+{
+    компил если Т == ц32
+    {
+        возврат значение
+    }
+    возврат 0
+}
+)";
+    Module* module = program.loadSource(source, "проба");
+    std::vector<Report> reports = resolveNames(program, *module, Language::Russian, makeComptimeEvaluator);
+    context.expectEqual(reports.size(), size_t{0}, "ошибки имён");
+    reports = checkTypes(program, *module, Language::Russian, makeComptimeEvaluator);
+    std::string text;
+    for (const Report& report : reports)
+    {
+        text += renderReport(report, module->source, Language::Russian) + "\n";
+    }
+    context.expectEqual(text, std::string("21:23 ошибка С0303 «5»: ожидался тип `стр`, а получен `компил_цел`\n"),
+        "только активная ветвь");
 }

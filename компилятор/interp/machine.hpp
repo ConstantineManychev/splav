@@ -111,6 +111,10 @@ public:
     std::vector<TestOutcome> runTests();
 
     Cell invoke(const FunctionInfo& function, Cell receiver, std::vector<Cell> arguments);
+    Cell evaluateIn(const SyntaxNodeView& expression, Module& module);
+    Cell typeValue(const SyntaxNodeView& node, Module* module, const std::vector<Local>* bindings);
+    Cell typeInfo(const Cell& type);
+    void reset();
     [[noreturn]] void panic(const std::string& message) const;
     void write(bool error, std::string_view text) const;
     std::string show(const Cell& value);
@@ -146,6 +150,31 @@ public:
     int32_t nextDescriptor = 3;
 
 private:
+    struct Layout
+    {
+        size_t size = 0;
+        size_t align = 1;
+    };
+
+    struct FieldLayout
+    {
+        std::string name;
+        Cell type;
+        Layout layout;
+        size_t offset = 0;
+    };
+
+    struct EnumLayout
+    {
+        Layout layout;
+        std::vector<std::vector<FieldLayout>> variants;
+    };
+
+    std::vector<Local> bindingsOf(const Cell& type) const;
+    Layout layoutOf(const Cell& type);
+    std::vector<FieldLayout> fieldLayouts(const TypeDecl& decl, const std::vector<Local>& bindings);
+    Layout placeFields(std::vector<FieldLayout>& fields, size_t start, bool dense, size_t minimumAlign);
+    EnumLayout enumLayout(const TypeDecl& decl, const std::vector<Local>& bindings);
     void initialize();
     Frame& frame();
     const std::string& keyOf(const SyntaxToken& token);

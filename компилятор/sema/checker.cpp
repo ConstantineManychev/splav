@@ -1165,8 +1165,49 @@ private:
             std::move(notes));
     }
 
+    bool referencesLocals(const SyntaxNodeView& node) const
+    {
+        if (node.kind() == NameExpr)
+        {
+            const std::optional<SyntaxToken> name = node.token(Identifier);
+            return node.hasToken(KwSelf) || (name && local(nameKey(name->text)) != nullptr);
+        }
+        for (const SyntaxNodeView& child : node.nodes())
+        {
+            if (referencesLocals(child))
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    std::optional<bool> comptimeDecision(const SyntaxNodeView& statement)
+    {
+        const SyntaxNodeView condition = statement.child(0);
+        if (!statement.hasToken(KwComptime) || !evaluator || !condition || referencesLocals(condition))
+        {
+            return std::nullopt;
+        }
+        return evaluator->evaluateCondition(condition, module);
+    }
+
     void checkIf(const SyntaxNodeView& statement)
     {
+        if (const std::optional<bool> decided = comptimeDecision(statement))
+        {
+            infer(statement.child(0), builtinType("бул"));
+            const SyntaxNodeView chosen = *decided ? statement.child(1) : statement.child(2);
+            if (chosen && chosen.kind() == IfStmt)
+            {
+                checkIf(chosen);
+            }
+            else if (chosen)
+            {
+                checkBlock(chosen);
+            }
+            return;
+        }
         scopes.emplace_back();
         bool thenDone = false;
         for (const SyntaxNodeView& child : statement.nodes())

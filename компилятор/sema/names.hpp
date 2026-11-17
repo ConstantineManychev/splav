@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sema/comptime.hpp"
 #include "sema/program.hpp"
 #include "sema/report.hpp"
 
@@ -17,7 +18,8 @@ struct Respelling
     std::string text;
 };
 
-std::vector<Report> resolveNames(Program& program, Module& module, Language language);
+std::vector<Report> resolveNames(
+    Program& program, Module& module, Language language, const EvaluatorFactory& evaluators = {});
 std::vector<Respelling> canonicalSpellings(Program& program, Module& module);
 
 }

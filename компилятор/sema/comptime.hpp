@@ -5,6 +5,7 @@
 
 #include <functional>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace splav
@@ -15,6 +16,7 @@ class ComptimeEvaluator
 public:
     virtual ~ComptimeEvaluator() = default;
     virtual TypePtr evaluateType(const FunctionInfo& function, const std::vector<TypePtr>& arguments) = 0;
+    virtual std::optional<bool> evaluateCondition(const SyntaxNodeView& condition, Module& module) = 0;
 };
 
 using EvaluatorFactory = std::function<std::unique_ptr<ComptimeEvaluator>(Program&, Module&, Declarations&)>;

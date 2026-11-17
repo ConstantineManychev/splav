@@ -89,8 +89,30 @@ public:
         }
         catch (const Panic&)
         {
+            machine.reset();
             return unknownType();
         }
+    }
+
+    std::optional<bool> evaluateCondition(const SyntaxNodeView& condition, Module& module) override
+    {
+        try
+        {
+            const Cell value = dereference(machine.evaluateIn(condition, module));
+            if (value->kind == ValueKind::Bool)
+            {
+                return value->truth;
+            }
+        }
+        catch (const Panic&)
+        {
+            machine.reset();
+        }
+        catch (const Escape&)
+        {
+            machine.reset();
+        }
+        return std::nullopt;
     }
 
 private:
