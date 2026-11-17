@@ -622,6 +622,40 @@ Cell testSkip(Call& call)
     return call.machine.structValue(call.machine.failureType, {std::move(reason)});
 }
 
+Cell compileTarget(Call& call)
+{
+#if defined(_WIN32)
+    constexpr std::string_view SYSTEM = "Windows";
+#elif defined(__APPLE__)
+    constexpr std::string_view SYSTEM = "MacOS";
+#else
+    constexpr std::string_view SYSTEM = "Linux";
+#endif
+#if defined(__aarch64__) || defined(_M_ARM64)
+    constexpr std::string_view ARCHITECTURE = "AArch64";
+#else
+    constexpr std::string_view ARCHITECTURE = "X86_64";
+#endif
+    Machine& machine = call.machine;
+    return machine.structValue(machine.findType("ядро.прелюдия", "Цель"),
+        {machine.enumValue(machine.findType("ядро.прелюдия", "Ос"), SYSTEM, {}),
+            machine.enumValue(machine.findType("ядро.прелюдия", "Архитектура"), ARCHITECTURE, {})});
+}
+
+Cell uniqueNew(Call& call)
+{
+    if (call.arguments.empty())
+    {
+        call.machine.panic("`Уник.новый` без значения");
+    }
+    return call.machine.structValue(call.machine.uniqueType, {referenceCell(copyCell(call.arguments.back()))});
+}
+
+Cell uniqueRelease(Call&)
+{
+    return voidCell();
+}
+
 Cell regionAllocate(Call& call)
 {
     if (call.arguments.empty())
@@ -884,6 +918,9 @@ void registerBuiltins(std::unordered_map<std::string, Builtin>& table)
         {"ядро.тест.ожидатьУспех", expectSuccess},
         {"ядро.тест.ожидатьОшибку", expectFailure},
         {"ядро.тест.пропуск", testSkip},
+        {"ядро.прелюдия.компил_цель", compileTarget},
+        {"Уник.новый", uniqueNew},
+        {"Уник.освободить", uniqueRelease},
         {"Регион.выделить", regionAllocate},
         {"Регион.выделитьСрез", regionAllocateSlice},
         {"Регион.попытатьсяВыделить", regionTryAllocate},

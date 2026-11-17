@@ -37,6 +37,7 @@ enum class ValueKind : uint8_t
     Chars,
     Enumeration,
     Function,
+    Closure,
     Type,
     Module,
 };
@@ -87,6 +88,14 @@ double integerToDouble(const WideInteger& value);
 std::string integerText(const WideInteger& value);
 std::string floatText(double value, Number number);
 
+struct Closure
+{
+    SyntaxNodeView node;
+    Module* module = nullptr;
+    const FunctionInfo* enclosing = nullptr;
+    std::vector<std::pair<std::string, Cell>> captures;
+};
+
 struct Value
 {
     ValueKind kind = ValueKind::Void;
@@ -109,6 +118,7 @@ struct Value
     std::shared_ptr<std::string> builder;
     std::vector<Cell> items;
     Cell target;
+    std::shared_ptr<const Closure> closure;
 };
 
 Cell makeCell(Value value);

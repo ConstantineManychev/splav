@@ -136,6 +136,7 @@ public:
     const TypeDecl* fileType = nullptr;
     const TypeDecl* regionType = nullptr;
     const TypeDecl* arenaType = nullptr;
+    const TypeDecl* uniqueType = nullptr;
     std::map<int32_t, std::FILE*> files;
     std::set<const std::string*> skipReasons;
     int32_t nextDescriptor = 3;
@@ -153,8 +154,16 @@ private:
     std::pair<const Entry*, Module*> lookup(Module* module, const std::string& key) const;
     const TypeDecl* resolveDecl(const SyntaxNodeView& node, Module* module) const;
     std::optional<Number> resolveNumber(const SyntaxNodeView& node, Module* module) const;
-    void coerce(const Cell& cell, const SyntaxNodeView& type, Module* module);
+    std::optional<Number> numberOf(const SyntaxNodeView& type, Module* module, const std::vector<Local>* bindings);
+    void coerce(
+        const Cell& cell, const SyntaxNodeView& type, Module* module, const std::vector<Local>* bindings = nullptr);
     const Prepared& prepare(const FunctionInfo& function);
+    std::vector<Local> inferTypeArguments(const Prepared& signature, const std::vector<Cell>& arguments);
+    Cell typeOf(const Cell& value) const;
+    std::string typeName(const Cell& value) const;
+    Cell synthesize(const SyntaxNodeView& node);
+    Cell closureValue(const SyntaxNodeView& node);
+    Cell callClosure(const Closure& closure, std::vector<Cell> arguments);
     Cell defaultValue(const SyntaxNodeView& type, Module* module);
     Cell wrapError(const Cell& error);
     std::optional<std::pair<const TypeDecl*, uint32_t>> findVariant(const std::string& key) const;
@@ -218,6 +227,9 @@ private:
     std::unordered_map<const char*, Cell> literals;
     std::map<std::pair<Module*, uint32_t>, Cell> constants;
     std::unordered_map<const FunctionInfo*, Prepared> prepared;
+    std::deque<TypeDecl> synthesizedTypes;
+    std::map<std::string, const TypeDecl*> instances;
+    std::unordered_map<const TypeDecl*, std::vector<Local>> typeArguments;
     std::unordered_map<std::string, std::vector<std::pair<const TypeDecl*, uint32_t>>> variants;
     Module* currentModule = nullptr;
     uint32_t currentOffset = 0;

@@ -237,6 +237,7 @@ std::string valueKindName(const Value& value)
     case ValueKind::Enumeration:
         return "перечисление";
     case ValueKind::Function:
+    case ValueKind::Closure:
         return "функ";
     case ValueKind::Type:
         return "тип";
@@ -297,6 +298,7 @@ Machine::Machine(Program& owner, SourceModule& main, const RunOptions& chosen)
     fileType = findType("ядро.фс", "Файл");
     regionType = findType("ядро.прелюдия", "Регион");
     arenaType = findType("ядро.память", "Рег");
+    uniqueType = findType("ядро.прелюдия", "Уник");
     currentModule = &entryModule;
 }
 
@@ -469,7 +471,26 @@ std::optional<Number> Machine::resolveNumber(const SyntaxNodeView& node, SourceM
     return numberNamed(key);
 }
 
-void Machine::coerce(const Cell& cell, const SyntaxNodeView& type, SourceModule* module)
+std::optional<Number> Machine::numberOf(
+    const SyntaxNodeView& type, SourceModule* module, const std::vector<Local>* bindings)
+{
+    if (bindings != nullptr && type.kind() == NameExpr && type.token(Identifier))
+    {
+        const std::string& key = keyOf(*type.token(Identifier));
+        for (auto bound = bindings->rbegin(); bound != bindings->rend(); ++bound)
+        {
+            if (bound->key == key)
+            {
+                const Value& value = *dereference(bound->cell);
+                return value.kind == ValueKind::Type ? numberNamed(value.name) : std::nullopt;
+            }
+        }
+    }
+    return resolveNumber(type, module);
+}
+
+void Machine::coerce(
+    const Cell& cell, const SyntaxNodeView& type, SourceModule* module, const std::vector<Local>* bindings)
 {
     if (!cell || !type)
     {
@@ -490,7 +511,7 @@ void Machine::coerce(const Cell& cell, const SyntaxNodeView& type, SourceModule*
         }
         if (!value.items.empty() && !inner.empty())
         {
-            coerce(value.items.front(), inner.front(), module);
+            coerce(value.items.front(), inner.front(), module, bindings);
         }
         return;
     }
@@ -500,7 +521,7 @@ void Machine::coerce(const Cell& cell, const SyntaxNodeView& type, SourceModule*
         {
             return;
         }
-        const std::optional<Number> number = resolveNumber(type, module);
+        const std::optional<Number> number = numberOf(type, module, bindings);
         if (!number)
         {
             return;
@@ -534,7 +555,7 @@ void Machine::coerce(const Cell& cell, const SyntaxNodeView& type, SourceModule*
         const std::vector<SyntaxNodeView> parts = arguments ? arguments.nodes() : std::vector<SyntaxNodeView>();
         if (value.variant < parts.size())
         {
-            coerce(value.items.front(), parts[value.variant], module);
+            coerce(value.items.front(), parts[value.variant], module, bindings);
         }
         return;
     }
@@ -846,7 +867,9 @@ Cell Machine::construct(const TypeDecl* decl, uint32_t variant, std::vector<Cell
         Cell item = consume(arguments[index]);
         if (index < declared.payload.size())
         {
-            coerce(item, declared.payload[index], decl->module);
+            const auto known = typeArguments.find(decl);
+            coerce(
+                item, declared.payload[index], decl->module, known != typeArguments.end() ? &known->second : nullptr);
         }
         payload.push_back(std::move(item));
     }
@@ -894,6 +917,15 @@ Cell Machine::invoke(const FunctionInfo& function, Cell receiver, std::vector<Ce
     callee.errorType = signature.error;
     callee.scopes.emplace_back();
     const bool skipComptime = arguments.size() + signature.comptimeCount <= signature.runtimeCount;
+    std::vector<Local> typeBindings;
+    if (skipComptime && signature.comptimeCount > 0)
+    {
+        typeBindings = inferTypeArguments(signature, arguments);
+        for (const Local& binding : typeBindings)
+        {
+            callee.scopes.back().locals.push_back(binding);
+        }
+    }
     size_t next = 0;
     for (const Parameter& parameter : signature.parameters)
     {
@@ -935,7 +967,11 @@ Cell Machine::invoke(const FunctionInfo& function, Cell receiver, std::vector<Ce
             else
             {
                 bound = consume(dereference(argument));
-                coerce(bound, parameter.type, function.module);
+                coerce(bound, parameter.type, function.module, &typeBindings);
+            }
+            if (parameter.comptime)
+            {
+                typeBindings.push_back(Local{parameter.key, bound});
             }
         }
         callee.scopes.back().locals.push_back(Local{parameter.key, std::move(bound)});
@@ -951,8 +987,329 @@ Cell Machine::invoke(const FunctionInfo& function, Cell receiver, std::vector<Ce
     --depth;
     currentModule = savedModule;
     currentOffset = savedOffset;
-    coerce(result, signature.result, function.module);
+    coerce(result, signature.result, function.module, &typeBindings);
     return result;
+}
+
+std::vector<Local> Machine::inferTypeArguments(const Prepared& signature, const std::vector<Cell>& arguments)
+{
+    std::vector<Local> inferred;
+    for (const Parameter& parameter : signature.parameters)
+    {
+        if (!parameter.comptime)
+        {
+            continue;
+        }
+        Cell found;
+        size_t position = 0;
+        for (const Parameter& candidate : signature.parameters)
+        {
+            if (candidate.self || candidate.comptime)
+            {
+                continue;
+            }
+            SyntaxNodeView type = candidate.type;
+            while (type && (type.kind() == RefExpr || type.kind() == OptionalType))
+            {
+                type = type.child(0);
+            }
+            if (!found && position < arguments.size() && type && type.kind() == NameExpr && type.token(Identifier)
+                && keyOf(*type.token(Identifier)) == parameter.key)
+            {
+                found = typeOf(arguments[position]);
+            }
+            ++position;
+        }
+        if (!found)
+        {
+            Value unknown;
+            unknown.kind = ValueKind::Type;
+            unknown.name = "?";
+            found = makeCell(std::move(unknown));
+        }
+        inferred.push_back(Local{parameter.key, found});
+    }
+    return inferred;
+}
+
+Cell Machine::typeOf(const Cell& cell) const
+{
+    const Value& value = *dereference(cell);
+    Value type;
+    type.kind = ValueKind::Type;
+    switch (value.kind)
+    {
+    case ValueKind::Integer:
+        type.name = std::string(numberName(value.number));
+        break;
+    case ValueKind::Float:
+        type.name = value.number == Number::F32 ? "в32" : "в64";
+        break;
+    case ValueKind::Bool:
+        type.name = "бул";
+        break;
+    case ValueKind::Char:
+        type.name = "сим";
+        break;
+    case ValueKind::Str:
+        type.name = "стр";
+        break;
+    case ValueKind::Struct:
+    case ValueKind::Enum:
+        type.decl = value.decl;
+        break;
+    case ValueKind::Vector:
+        type.name = std::string(VECTOR_KEY);
+        type.number = value.number;
+        type.length = value.items.size();
+        break;
+    case ValueKind::Type:
+        type.name = "тип";
+        break;
+    default:
+        type.name = valueKindName(value);
+        break;
+    }
+    return makeCell(std::move(type));
+}
+
+std::string Machine::typeName(const Cell& cell) const
+{
+    const Value& value = *dereference(cell);
+    if (value.kind != ValueKind::Type)
+    {
+        return valueKindName(value);
+    }
+    if (value.decl != nullptr)
+    {
+        return value.decl->display;
+    }
+    if (value.name == VECTOR_KEY)
+    {
+        return "Вектор(" + std::string(numberName(value.number)) + ", " + std::to_string(value.length) + ")";
+    }
+    return value.name;
+}
+
+Cell Machine::synthesize(const SyntaxNodeView& node)
+{
+    Frame& current = frame();
+    std::vector<Local> bindings;
+    std::string arguments;
+    if (current.function != nullptr && !current.function->builtin)
+    {
+        for (const Parameter& parameter : prepare(*current.function).parameters)
+        {
+            if (!parameter.comptime)
+            {
+                continue;
+            }
+            if (Cell* bound = findLocal(parameter.key))
+            {
+                bindings.push_back(Local{parameter.key, *bound});
+                arguments += (arguments.empty() ? "" : ", ") + typeName(*bound);
+            }
+        }
+    }
+    const std::string identity = (current.module != nullptr ? current.module->name : std::string()) + ":"
+        + std::to_string(node.offset()) + "(" + arguments + ")";
+    Value result;
+    result.kind = ValueKind::Type;
+    if (const auto found = instances.find(identity); found != instances.end())
+    {
+        result.decl = found->second;
+        return makeCell(std::move(result));
+    }
+    TypeDecl& decl = synthesizedTypes.emplace_back();
+    decl.kind = node.kind() == EnumType ? DeclKind::Enum : DeclKind::Struct;
+    decl.module = current.module;
+    decl.node = node;
+    decl.nameOffset = node.offset();
+    const std::string base = current.function != nullptr ? current.function->display
+        : node.kind() == EnumType                        ? std::string("переч")
+                                                         : std::string("структ");
+    decl.key = current.function != nullptr ? current.function->key : base;
+    decl.display = arguments.empty() ? base : base + "(" + arguments + ")";
+    if (const SyntaxNodeView fields = node.node(FieldList))
+    {
+        for (const SyntaxNodeView& field : fields.nodes())
+        {
+            const std::optional<SyntaxToken> name = field.token(Identifier);
+            if (field.kind() != Field || !name)
+            {
+                continue;
+            }
+            FieldDecl described;
+            described.key = keyOf(*name);
+            described.display = std::string(name->text);
+            for (const SyntaxNodeView& part : field.nodes())
+            {
+                if (part.kind() != Attribute)
+                {
+                    described.type = part;
+                }
+            }
+            described.open = true;
+            decl.fields.push_back(described);
+        }
+    }
+    if (const SyntaxNodeView list = node.node(VariantList))
+    {
+        for (const SyntaxNodeView& variant : list.nodes())
+        {
+            const std::optional<SyntaxToken> name = variant.token(Identifier);
+            if (variant.kind() != Variant || !name)
+            {
+                continue;
+            }
+            VariantDecl described;
+            described.key = keyOf(*name);
+            described.display = std::string(name->text);
+            for (const SyntaxNodeView& field : variant.nodes())
+            {
+                if (field.kind() == VariantField)
+                {
+                    for (const SyntaxNodeView& part : field.nodes())
+                    {
+                        described.payload.push_back(part);
+                    }
+                }
+            }
+            variants[described.key].emplace_back(&decl, static_cast<uint32_t>(decl.variants.size()));
+            decl.variants.push_back(described);
+        }
+    }
+    typeArguments[&decl] = std::move(bindings);
+    instances.emplace(identity, &decl);
+    result.decl = &decl;
+    return makeCell(std::move(result));
+}
+
+Cell Machine::closureValue(const SyntaxNodeView& node)
+{
+    const bool literal = node.hasToken(FatArrow) || node.node(Block);
+    if (!literal)
+    {
+        Value type;
+        type.kind = ValueKind::Type;
+        type.name = "функ";
+        return makeCell(std::move(type));
+    }
+    const bool copied = node.hasToken(LBracket);
+    auto closure = std::make_shared<Closure>();
+    closure->node = node;
+    closure->module = frame().module;
+    closure->enclosing = frame().function;
+    for (const Scope& scope : frame().scopes)
+    {
+        for (const Local& local : scope.locals)
+        {
+            closure->captures.emplace_back(local.key, copied ? consume(local.cell) : local.cell);
+        }
+    }
+    Value value;
+    value.kind = ValueKind::Closure;
+    value.closure = std::move(closure);
+    return makeCell(std::move(value));
+}
+
+Cell Machine::callClosure(const Closure& closure, std::vector<Cell> arguments)
+{
+    if (depth >= MAX_CALL_DEPTH)
+    {
+        panic("стек задачи исчерпан: глубина вызовов больше " + std::to_string(MAX_CALL_DEPTH));
+    }
+    Frame callee;
+    callee.function = closure.enclosing;
+    callee.module = closure.module;
+    callee.scopes.emplace_back();
+    for (const auto& [key, cell] : closure.captures)
+    {
+        callee.scopes.back().locals.push_back(Local{key, cell});
+    }
+    callee.scopes.emplace_back();
+    SyntaxNodeView body;
+    SyntaxNodeView result;
+    bool afterArrow = false;
+    bool afterFatArrow = false;
+    size_t next = 0;
+    closure.node.forEachChild([&](const SyntaxNodeView& child, const std::optional<SyntaxToken>& token)
+    {
+        if (token)
+        {
+            afterArrow = afterArrow || token->kind == Arrow;
+            afterFatArrow = afterFatArrow || token->kind == FatArrow;
+            return;
+        }
+        if (child.kind() == FunctionParam)
+        {
+            const std::optional<SyntaxToken> name = child.token(Identifier);
+            const SyntaxNodeView type = child.hasToken(Colon) ? child.child(0) : SyntaxNodeView();
+            if (next >= arguments.size())
+            {
+                panic("замыканию не хватает аргументов");
+            }
+            const Cell& argument = arguments[next++];
+            Cell bound;
+            if (type && type.kind() == RefExpr)
+            {
+                bound = argument->kind == ValueKind::Reference ? consume(argument) : referenceCell(argument);
+            }
+            else
+            {
+                bound = consume(dereference(argument));
+                coerce(bound, type, closure.module);
+            }
+            if (name)
+            {
+                callee.scopes.back().locals.push_back(Local{keyOf(*name), std::move(bound)});
+            }
+        }
+        else if (child.kind() == Block || afterFatArrow)
+        {
+            body = child;
+        }
+        else if (afterArrow && !result)
+        {
+            result = child;
+        }
+    });
+    if (result && result.kind() == CallExpr)
+    {
+        const SyntaxNodeView values = result.node(ArgList);
+        if (resolveDecl(result.child(0), closure.module) == resultType && values && values.child(1))
+        {
+            callee.errorType = resolveDecl(values.child(1), closure.module);
+        }
+    }
+    frames.push_back(std::move(callee));
+    ++depth;
+    SourceModule* const savedModule = currentModule;
+    const uint32_t savedOffset = currentOffset;
+    currentModule = closure.module;
+    Cell value;
+    if (body.kind() == Block)
+    {
+        const Flow flow = execBlock(body);
+        value = flow == Flow::Return && frame().returned ? frame().returned : voidCell();
+    }
+    else
+    {
+        try
+        {
+            value = consume(eval(body));
+        }
+        catch (const Escape&)
+        {
+            value = frame().returned ? frame().returned : voidCell();
+        }
+    }
+    frames.pop_back();
+    --depth;
+    currentModule = savedModule;
+    currentOffset = savedOffset;
+    coerce(value, result, closure.module);
+    return value;
 }
 
 Flow Machine::execBlock(const SyntaxNodeView& block)
@@ -1866,6 +2223,11 @@ Cell Machine::eval(const SyntaxNodeView& node)
         return compound(node);
     case MatchExpr:
         return match(node, nullptr);
+    case FunctionExpr:
+        return closureValue(node);
+    case StructType:
+    case EnumType:
+        return synthesize(node);
     case TogetherExpr:
     {
         std::vector<Cell> items;
@@ -2096,6 +2458,10 @@ Cell Machine::member(const Cell& receiver, const std::string& key, std::string_v
                 return value->items[index];
             }
         }
+        if (value->decl == uniqueType && !value->items.empty())
+        {
+            return member(value->items.front(), key, display);
+        }
         break;
     }
     case ValueKind::Range:
@@ -2252,6 +2618,10 @@ Cell Machine::call(const SyntaxNodeView& node)
     {
         return invoke(*function->function, nullptr, std::move(values));
     }
+    if (function->kind == ValueKind::Closure)
+    {
+        return callClosure(*function->closure, std::move(values));
+    }
     if (function->kind == ValueKind::Type)
     {
         return function;
@@ -2266,6 +2636,26 @@ Cell Machine::callMethod(
     if (const FunctionInfo* method = methodFor(*target, key))
     {
         return invoke(*method, receiver, std::move(arguments));
+    }
+    if (target->kind == ValueKind::Struct && target->decl == uniqueType && !target->items.empty())
+    {
+        return callMethod(target->items.front(), key, display, std::move(arguments));
+    }
+    if (target->kind == ValueKind::Struct)
+    {
+        const auto& fields = target->decl->fields;
+        for (size_t position = 0; position < fields.size(); ++position)
+        {
+            const Cell& stored = dereference(target->items[position]);
+            if (fields[position].key == key && stored->kind == ValueKind::Closure)
+            {
+                return callClosure(*stored->closure, std::move(arguments));
+            }
+            if (fields[position].key == key && stored->kind == ValueKind::Function && stored->function != nullptr)
+            {
+                return invoke(*stored->function, nullptr, std::move(arguments));
+            }
+        }
     }
     bool handled = false;
     Cell result = nativeMethod(receiver, key, arguments, handled);
@@ -2397,20 +2787,22 @@ Cell Machine::arithmetic(SyntaxKind operation, const Cell& leftCell, const Cell&
     }
     const Value& left = *dereference(leftCell);
     const Value& right = *dereference(rightCell);
-    if (left.kind == ValueKind::Vector || right.kind == ValueKind::Vector)
-    {
-        return vectorArithmetic(operation, leftCell, rightCell);
-    }
     if (left.kind == ValueKind::Struct || left.kind == ValueKind::Enum)
     {
         const std::string_view traitMethod = operation == Plus ? "сложить"
             : operation == Minus                               ? "вычесть"
             : operation == Star                                ? "умножить"
+            : operation == Slash                               ? "разделить"
+            : operation == Percent                             ? "остаток"
                                                                : "";
         if (const FunctionInfo* method = traitMethod.empty() ? nullptr : methodFor(left, std::string(traitMethod)))
         {
             return invoke(*method, leftCell, {rightCell});
         }
+    }
+    if (left.kind == ValueKind::Vector || right.kind == ValueKind::Vector)
+    {
+        return vectorArithmetic(operation, leftCell, rightCell);
     }
     const auto symbol = [operation] { return std::string(fixedText(operation)); };
     if (left.kind == ValueKind::Integer && right.kind == ValueKind::Integer)
@@ -2841,6 +3233,7 @@ Cell Machine::prefix(const SyntaxNodeView& node)
     case KwTry:
         return attempt(parts.front());
     case KwUnsafe:
+    case KwComptime:
         return eval(parts.front());
     case Star:
         return dereference(eval(parts.front()));
@@ -2962,6 +3355,25 @@ Cell Machine::compound(const SyntaxNodeView& node)
         }
         decl = alias->kind == ValueKind::Type ? alias->decl : nullptr;
     }
+    std::vector<Local> bindings;
+    if (const auto known = typeArguments.find(decl); known != typeArguments.end())
+    {
+        bindings = known->second;
+    }
+    else if (decl != nullptr && type.kind() == CallExpr && !decl->parameters.empty())
+    {
+        if (const SyntaxNodeView arguments = type.node(ArgList))
+        {
+            size_t position = 0;
+            for (const SyntaxNodeView& argument : arguments.nodes())
+            {
+                if (position < decl->parameters.size())
+                {
+                    bindings.push_back(Local{decl->parameters[position++], eval(argument)});
+                }
+            }
+        }
+    }
     if (decl == nullptr || decl->kind != DeclKind::Struct)
     {
         currentOffset = type.offset();
@@ -3010,7 +3422,7 @@ Cell Machine::compound(const SyntaxNodeView& node)
             target = nextPositional;
         }
         Cell item = consume(eval(values.front()));
-        coerce(item, fields[*target].type, decl->module);
+        coerce(item, fields[*target].type, decl->module, &bindings);
         items[*target] = std::move(item);
     }
     for (Cell& item : items)
@@ -3114,6 +3526,47 @@ int Machine::compare(const Cell& leftCell, const Cell& rightCell) const
     {
         return static_cast<int>(left.truth) - static_cast<int>(right.truth);
     }
+    const auto items = [this](const std::vector<Cell>& a, const std::vector<Cell>& b)
+    {
+        for (size_t position = 0; position < a.size() && position < b.size(); ++position)
+        {
+            if (const int order = compare(a[position], b[position]); order != 0)
+            {
+                return order;
+            }
+        }
+        return a.size() < b.size() ? -1 : (a.size() > b.size() ? 1 : 0);
+    };
+    if (left.kind == right.kind
+        && (left.kind == ValueKind::Struct || left.kind == ValueKind::Tuple || left.kind == ValueKind::Vector)
+        && left.decl == right.decl)
+    {
+        return items(left.items, right.items);
+    }
+    if (left.kind == ValueKind::Enum && right.kind == ValueKind::Enum && left.decl == right.decl)
+    {
+        if (left.variant != right.variant)
+        {
+            return left.variant < right.variant ? -1 : 1;
+        }
+        return items(left.items, right.items);
+    }
+    if (left.kind == ValueKind::Optional && right.kind == ValueKind::Optional)
+    {
+        return items(left.items, right.items);
+    }
+    if (left.kind == ValueKind::List && right.kind == ValueKind::List)
+    {
+        const size_t length = std::min(listLength(left), listLength(right));
+        for (size_t position = 0; position < length; ++position)
+        {
+            if (const int order = compare(listElement(left, position), listElement(right, position)); order != 0)
+            {
+                return order;
+            }
+        }
+        return listLength(left) < listLength(right) ? -1 : (listLength(left) > listLength(right) ? 1 : 0);
+    }
     panic("`" + valueKindName(left) + "` и `" + valueKindName(right) + "` нельзя упорядочить");
 }
 
@@ -3191,6 +3644,13 @@ bool Machine::equal(const Cell& leftCell, const Cell& rightCell) const
         return sameItems(left.items, right.items);
     case ValueKind::Range:
         return left.inclusive == right.inclusive && sameItems(left.items, right.items);
+    case ValueKind::Type:
+        return left.decl == right.decl && left.name == right.name && left.number == right.number
+            && left.length == right.length && sameItems(left.items, right.items);
+    case ValueKind::Function:
+        return left.function == right.function;
+    case ValueKind::Closure:
+        return left.closure == right.closure;
     default:
         return &left == &right;
     }
@@ -3331,6 +3791,12 @@ std::string Machine::describe(const Cell& cell)
             + (value->items[1] ? describe(value->items[1]) : "");
     case ValueKind::Void:
         return "()";
+    case ValueKind::Type:
+        return typeName(value);
+    case ValueKind::Function:
+        return value->function != nullptr ? "функ " + value->function->display : "функ";
+    case ValueKind::Closure:
+        return "функ(…)";
     default:
         return show(value);
     }
