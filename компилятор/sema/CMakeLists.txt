@@ -2,6 +2,8 @@ add_library(splav_sema STATIC
     checker.cpp
     coverage.cpp
     declarations.cpp
+    memory/ast.cpp
+    memory/dump.cpp
     names.cpp
     naming.cpp
     program.cpp

@@ -4,6 +4,7 @@
 #include "interp/comptime.hpp"
 #include "interp/interpreter.hpp"
 #include "sema/checker.hpp"
+#include "sema/memory/ast.hpp"
 #include "sema/names.hpp"
 #include "sema/program.hpp"
 #include "support/file_io.hpp"
@@ -40,6 +41,7 @@ struct Options
     std::vector<std::string> paths;
     std::optional<std::string> library;
     bool check = false;
+    bool lowered = false;
     bool valid = true;
 };
 
@@ -74,6 +76,10 @@ Options parseOptions(Arguments arguments)
             {
                 options.valid = false;
             }
+        }
+        else if (view == "--аст")
+        {
+            options.lowered = true;
         }
         else if (view.starts_with(LANGUAGE))
         {
@@ -197,7 +203,7 @@ int printTree(Arguments arguments)
     if (!options.valid || options.paths.size() != 1)
     {
         writeStandardError(
-            "использование: сплав дерево [--режим=модуль|фрагмент|манифест] [--язык=ru|en] <файл или ->\n");
+            "использование: сплав дерево [--режим=модуль|фрагмент|манифест] [--аст] [--язык=ru|en] <файл или ->\n");
         return 2;
     }
     const std::string& path = options.paths.front();
@@ -208,6 +214,15 @@ int printTree(Arguments arguments)
         return 2;
     }
     const Parse parsed = parse(*source, modeFor(options, path));
+    if (options.lowered)
+    {
+        if (!parsed.diagnostics.empty())
+        {
+            return reportDiagnostics(parsed, *source, path, options.language) ? 0 : 1;
+        }
+        writeStandardOutput(memory::dumpTree(memory::Tree(*source, *parsed.root)));
+        return 0;
+    }
     writeStandardOutput(dumpTree(*parsed.root));
     return reportDiagnostics(parsed, *source, path, options.language) ? 0 : 1;
 }
